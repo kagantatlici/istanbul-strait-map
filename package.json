@@ -15,6 +15,8 @@
     "playwright": "^1.55.0"
   },
   "dependencies": {
-    "mem0-ts": "^0.1.5"
+    "@modelcontextprotocol/server-filesystem": "^2025.8.21",
+    "mem0-ts": "^0.1.5",
+    "puppeteer": "^24.17.0"
   }
 }
