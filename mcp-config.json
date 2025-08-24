@@ -15,14 +15,23 @@
     {
       "name": "Context 7",
       "type": "context-provider",
-      "installed": false,
-      "notes": "Stub entry; provide package name/version for integration."
+      "installed": true,
+      "server": {
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp", "--api-key", "ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"]
+      },
+      "notes": "Local MCP configured to run Context7 via npx with provided API key. See https://github.com/upstash/context7 for details."
     },
     {
       "name": "memory",
       "type": "memory-store",
-      "installed": false,
-      "notes": "Stub entry; provide package name/version for integration."
+      "installed": true,
+      "package": "mem0-ts",
+      "server": {
+        "command": "npx",
+        "args": ["-y", "mem0-ts"]
+      },
+      "notes": "Integrated using the mem0-ts package as an in-process memory store for LLM memory."
     }
   ]
 }

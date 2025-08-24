@@ -12,5 +12,8 @@
   "type": "commonjs",
   "devDependencies": {
     "playwright": "^1.55.0"
+  },
+  "dependencies": {
+    "mem0-ts": "^0.1.5"
   }
 }
