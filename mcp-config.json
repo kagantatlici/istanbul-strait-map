@@ -1,0 +1,30 @@
+{
+  "mcps": [
+    {
+      "name": "playwright",
+      "type": "testing",
+      "installed": true,
+      "notes": "Playwright configured with basic tests and config."
+    },
+    {
+      "name": "git",
+      "type": "vcs",
+      "installed": true,
+      "notes": "Repository initialized and .gitignore added."
+    },
+    {
+      "name": "Context 7",
+      "type": "context-provider",
+      "installed": false,
+      "notes": "Stub entry; provide package name/version for integration."
+    },
+    {
+      "name": "memory",
+      "type": "memory-store",
+      "installed": false,
+      "notes": "Stub entry; provide package name/version for integration."
+    }
+  ]
+}
+
+
