@@ -11,6 +11,14 @@
     "serena": {
       "command": "uv",
       "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
+    },
+    "memory": {
+      "command": "node",
+      "args": ["./mcp-servers/memory-mcp.js"]
+    },
+    "puppeteer": {
+      "command": "node",
+      "args": ["./mcp-servers/puppeteer-mcp.js"]
     }
   }
 }

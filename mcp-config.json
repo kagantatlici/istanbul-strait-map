@@ -49,6 +49,26 @@
         "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
       },
       "notes": "Serena coding agent with semantic code retrieval and editing."
+    },
+    {
+      "name": "memory",
+      "type": "memory-store",
+      "installed": true,
+      "server": {
+        "command": "node",
+        "args": ["./mcp-servers/memory-mcp.js"]
+      },
+      "notes": "Custom MCP server wrapper for mem0-ts memory store."
+    },
+    {
+      "name": "puppeteer",
+      "type": "web-automation",
+      "installed": true,
+      "server": {
+        "command": "node",
+        "args": ["./mcp-servers/puppeteer-mcp.js"]
+      },
+      "notes": "Custom MCP server wrapper for Puppeteer web automation."
     }
   ],
   "cursorConfig": {
@@ -64,6 +84,14 @@
       "serena": {
         "command": "uv",
         "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
+      },
+      "memory": {
+        "command": "node",
+        "args": ["./mcp-servers/memory-mcp.js"]
+      },
+      "puppeteer": {
+        "command": "node",
+        "args": ["./mcp-servers/puppeteer-mcp.js"]
       }
     }
   },
@@ -80,6 +108,14 @@
       "serena": {
         "command": "uv",
         "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
+      },
+      "memory": {
+        "command": "node",
+        "args": ["./mcp-servers/memory-mcp.js"]
+      },
+      "puppeteer": {
+        "command": "node",
+        "args": ["./mcp-servers/puppeteer-mcp.js"]
       }
     }
   }
