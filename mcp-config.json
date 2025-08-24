@@ -58,13 +58,13 @@
     {
       "name": "serena",
       "type": "coding-agent",
-      "installed": false,
+      "installed": true,
       "package": "serena",
       "server": {
         "command": "uv",
-        "args": ["run", "serena"]
+        "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
       },
-      "notes": "Powerful coding agent toolkit with semantic retrieval and editing capabilities. Requires uv installation. See https://github.com/oraios/serena for setup instructions."
+      "notes": "Powerful coding agent toolkit with semantic retrieval and editing capabilities. Successfully installed with Python 3.11 via uv."
     }
   ]
 }
