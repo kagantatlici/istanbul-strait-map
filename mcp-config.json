@@ -54,6 +54,17 @@
         "args": ["-y", "@modelcontextprotocol/server-filesystem"]
       },
       "notes": "File system operations for reading, writing, and managing files and directories."
+    },
+    {
+      "name": "serena",
+      "type": "coding-agent",
+      "installed": false,
+      "package": "serena",
+      "server": {
+        "command": "uv",
+        "args": ["run", "serena"]
+      },
+      "notes": "Powerful coding agent toolkit with semantic retrieval and editing capabilities. Requires uv installation. See https://github.com/oraios/serena for setup instructions."
     }
   ]
 }
