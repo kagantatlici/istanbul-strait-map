@@ -4,69 +4,85 @@
       "name": "playwright",
       "type": "testing",
       "installed": true,
-      "notes": "Playwright configured with basic tests and config."
+      "server": {
+        "command": "npx",
+        "args": ["playwright", "test"]
+      },
+      "notes": "Playwright testing framework for browser automation and testing."
     },
     {
       "name": "git",
       "type": "vcs",
       "installed": true,
-      "notes": "Repository initialized and .gitignore added."
+      "server": {
+        "command": "git",
+        "args": ["status"]
+      },
+      "notes": "Git version control system for repository management."
     },
     {
-      "name": "Context 7",
+      "name": "context7",
       "type": "context-provider",
       "installed": true,
       "server": {
         "command": "npx",
         "args": ["-y", "@upstash/context7-mcp", "--api-key", "ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"]
       },
-      "notes": "Local MCP configured to run Context7 via npx with provided API key. See https://github.com/upstash/context7 for details."
-    },
-    {
-      "name": "memory",
-      "type": "memory-store",
-      "installed": true,
-      "package": "mem0-ts",
-      "server": {
-        "command": "npx",
-        "args": ["-y", "mem0-ts"]
-      },
-      "notes": "Integrated using the mem0-ts package as an in-process memory store for LLM memory."
-    },
-    {
-      "name": "puppeteer",
-      "type": "web-automation",
-      "installed": true,
-      "package": "puppeteer",
-      "server": {
-        "command": "npx",
-        "args": ["-y", "puppeteer"]
-      },
-      "notes": "Web automation and browser control for scraping, testing, and screenshots."
+      "notes": "Context7 MCP for up-to-date code documentation and examples."
     },
     {
       "name": "filesystem",
       "type": "file-operations",
       "installed": true,
-      "package": "@modelcontextprotocol/server-filesystem",
       "server": {
         "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-filesystem"]
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/kagantatlici/Desktop/Bogaz_Harita"]
       },
-      "notes": "File system operations for reading, writing, and managing files and directories."
+      "notes": "File system operations with project directory access."
     },
     {
       "name": "serena",
       "type": "coding-agent",
       "installed": true,
-      "package": "serena",
       "server": {
         "command": "uv",
         "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
       },
-      "notes": "Powerful coding agent toolkit with semantic retrieval and editing capabilities. Successfully installed with Python 3.11 via uv."
+      "notes": "Serena coding agent with semantic code retrieval and editing."
     }
-  ]
+  ],
+  "cursorConfig": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp", "--api-key", "ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"]
+      },
+      "filesystem": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/kagantatlici/Desktop/Bogaz_Harita"]
+      },
+      "serena": {
+        "command": "uv",
+        "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
+      }
+    }
+  },
+  "claudeCodeConfig": {
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp", "--api-key", "ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"]
+      },
+      "filesystem": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/kagantatlici/Desktop/Bogaz_Harita"]
+      },
+      "serena": {
+        "command": "uv",
+        "args": ["run", "--with", "serena", "--python", "3.11", "serena"]
+      }
+    }
+  }
 }
 
 
