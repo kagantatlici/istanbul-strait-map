@@ -48,6 +48,13 @@ class AISProxyServer {
             return;
         }
         
+        // Check if required environment variables are available
+        if (!process.env.AISSTREAM_WS_URL || !process.env.AISSTREAM_API_KEY) {
+            console.log('⚠️  Missing AIS environment variables, starting demo mode...');
+            this.handleConnectionFailure();
+            return;
+        }
+        
         console.log('🌊 Connecting to AISStream.io...');
         
         try {
@@ -497,7 +504,11 @@ server.listen(PORT, () => {
     console.log(`📊 Health check: http://localhost:${PORT}/health`);
     console.log(`📈 Stats: http://localhost:${PORT}/stats`);
     
-    // Connect to AISStream.io
+    // For testing: Start demo mode immediately
+    console.log('🧪 Testing mode: Starting demo immediately...');
+    aisProxy.startDemoMode();
+    
+    // Also try to connect to AISStream.io in parallel
     aisProxy.connectToAISStream();
 });
 
