@@ -1,0 +1,18 @@
+# Ignore all development and docs here
+serena/
+*.md
+*.MD
+*.txt
+*.log
+*.zip
+*.tar
+*.gz
+*.DS_Store
+# Node, Python, and misc environments
+node_modules/
+.venv/
+venv/
+__pycache__/
+.env
+# Ignore everything under serena or other nested repos
+**/.git
