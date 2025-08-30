@@ -589,11 +589,60 @@ const wss = new WebSocket.Server({
     // No custom path for Railway compatibility
 });
 
+// Log WebSocket server configuration
+console.log('🔌 WebSocket server configured for root path');
+console.log('🌐 WebSocket endpoint available at: ws://localhost:' + PORT + '/');
+console.log('📝 Note: WebSocket server listens on root path, not /ais');
+
+// Also create a WebSocket server for the /ais path to match documentation
+const aisWss = new WebSocket.Server({
+    server,
+    path: '/ais'
+});
+
+console.log('🔌 Additional WebSocket server configured for /ais path');
+console.log('🌐 WebSocket endpoint also available at: ws://localhost:' + PORT + '/ais');
+
 // Handle WebSocket connections
 wss.on('connection', (ws, req) => {
+    console.log('🔌 New WebSocket connection established');
+    console.log('📍 Connection details:', {
+        remoteAddress: req.socket.remoteAddress,
+        url: req.url,
+        headers: {
+            origin: req.headers.origin,
+            'user-agent': req.headers['user-agent']
+        }
+    });
+    
     aisProxy.addClient(ws);
     
+    // Handle messages from clients
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            console.log('📥 Received message from client:', data);
+            
+            // Handle request for current ships
+            if (data.type === 'request_ships') {
+                console.log('📋 Client requested current ships, sending', aisProxy.shipData.size, 'ships');
+                // Send current ships to client
+                aisProxy.shipData.forEach(ship => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            type: 'ship_update',
+                            data: ship
+                        }));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error parsing client message:', error);
+        }
+    });
+    
     ws.on('close', () => {
+        console.log('🔌 WebSocket connection closed');
         aisProxy.removeClient(ws);
     });
     
@@ -601,6 +650,105 @@ wss.on('connection', (ws, req) => {
         console.error('❌ WebSocket client error:', error);
         aisProxy.removeClient(ws);
     });
+    
+    // Send initial status to client
+    setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            console.log('📤 Sending initial status to new client');
+            ws.send(JSON.stringify({
+                type: 'status_update',
+                status: 'connected',
+                message: 'Connected to AIS proxy server',
+                shipCount: aisProxy.shipData.size,
+                timestamp: new Date().toISOString()
+            }));
+            
+            // Send current ships to new client
+            console.log(`📤 Sending ${aisProxy.shipData.size} current ships to new client`);
+            aisProxy.shipData.forEach(ship => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'ship_update',
+                        data: ship
+                    }));
+                }
+            });
+        }
+    }, 100);
+});
+
+// Handle WebSocket connections for /ais path
+aisWss.on('connection', (ws, req) => {
+    console.log('🔌 New WebSocket connection established on /ais path');
+    console.log('📍 Connection details:', {
+        remoteAddress: req.socket.remoteAddress,
+        url: req.url,
+        headers: {
+            origin: req.headers.origin,
+            'user-agent': req.headers['user-agent']
+        }
+    });
+    
+    aisProxy.addClient(ws);
+    
+    // Handle messages from clients
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            console.log('📥 Received message from client on /ais path:', data);
+            
+            // Handle request for current ships
+            if (data.type === 'request_ships') {
+                console.log('📋 Client requested current ships on /ais path, sending', aisProxy.shipData.size, 'ships');
+                // Send current ships to client
+                aisProxy.shipData.forEach(ship => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            type: 'ship_update',
+                            data: ship
+                        }));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('❌ Error parsing client message on /ais path:', error);
+        }
+    });
+    
+    ws.on('close', () => {
+        console.log('🔌 WebSocket connection closed on /ais path');
+        aisProxy.removeClient(ws);
+    });
+    
+    ws.on('error', (error) => {
+        console.error('❌ WebSocket client error on /ais path:', error);
+        aisProxy.removeClient(ws);
+    });
+    
+    // Send initial status to client
+    setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            console.log('📤 Sending initial status to new client on /ais path');
+            ws.send(JSON.stringify({
+                type: 'status_update',
+                status: 'connected',
+                message: 'Connected to AIS proxy server (/ais path)',
+                shipCount: aisProxy.shipData.size,
+                timestamp: new Date().toISOString()
+            }));
+            
+            // Send current ships to new client
+            console.log(`📤 Sending ${aisProxy.shipData.size} current ships to new client on /ais path`);
+            aisProxy.shipData.forEach(ship => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'ship_update',
+                        data: ship
+                    }));
+                }
+            });
+        }
+    }, 100);
 });
 
 // Start the server

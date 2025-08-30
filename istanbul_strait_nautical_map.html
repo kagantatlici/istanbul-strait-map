@@ -1833,6 +1833,9 @@
         const MIN_ZOOM = 10;
         const MAX_ZOOM = 15;
         
+        // DEBUG VERSION CHECK
+        console.log('🚢 AIS DEBUG VERSION: 2025-08-30 Enhanced Debugging');
+        
         // Ship simulation variables
         let shipSimulationActive = false;
         let shipRoute = null;
@@ -1875,6 +1878,213 @@
                 this.latitude = latitude;
                 this.longitude = longitude;
                 this.speed = speed || 0;
+                this.heading = heading || 0;
+                this.vesselType = vesselType || 'Unknown';
+                this.timestamp = timestamp;
+            }
+        }
+        
+        // AIS Ship Manager
+        class AISShipManager {
+            constructor() {
+                this.ships = {};
+                this.socket = null;
+                this.reconnectAttempts = 0;
+                this.cleanupInterval = null;
+            }
+            
+            connect() {
+                if (AIS_CONFIG.BACKEND_AVAILABLE) {
+                    this.socket = new WebSocket(AIS_CONFIG.BACKEND_WS_URL);
+                } else {
+                    this.socket = new WebSocket(AIS_CONFIG.WS_URL);
+                    this.socket.onopen = () => {
+                        this.socket.send(JSON.stringify({
+                            'APIKey': AIS_CONFIG.API_KEY,
+                            'BoundingBox': AIS_CONFIG.BOUNDING_BOX,
+                            'MaxShips': AIS_CONFIG.MAX_SHIPS
+                        }));
+                    };
+                }
+                
+                this.socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data && data.Ship) {
+                        const ship = data.Ship;
+                        this.ships[ship.MMSI] = new AISShipData(
+                            ship.MMSI,
+                            ship.ShipName,
+                            ship.Latitude,
+                            ship.Longitude,
+                            ship.Speed,
+                            ship.Heading,
+                            ship.VesselType,
+                            ship.Timestamp
+                        );
+                    }
+                };
+                
+                this.socket.onclose = () => {
+                    console.log('WebSocket connection closed. Attempting to reconnect...');
+                    setTimeout(() => {
+                        this.reconnectAttempts++;
+                        if (this.reconnectAttempts < AIS_CONFIG.MAX_RECONNECT_ATTEMPTS) {
+                            this.connect();
+                        } else {
+                            console.error('Max reconnect attempts reached. Giving up.');
+                        }
+                    }, AIS_CONFIG.RECONNECT_INTERVAL);
+                };
+            }
+            
+            disconnect() {
+                if (this.socket) {
+                    this.socket.close();
+                    this.socket = null;
+                }
+            }
+            
+            cleanup() {
+                this.cleanupInterval = setInterval(() => {
+                    const currentTime = Date.now();
+                    Object.keys(this.ships).forEach(mmsi => {
+                        const ship = this.ships[mmsi];
+                        if (currentTime - ship.timestamp > AIS_CONFIG.CLEANUP_INTERVAL) {
+                            delete this.ships[mmsi];
+                        }
+                    });
+                }, AIS_CONFIG.CLEANUP_INTERVAL);
+            }
+        }
+        
+        // ===== MAP CONFIGURATION AND MANAGEMENT SYSTEM =====
+        
+        // Map Configuration
+        const MAP_CONFIG = {
+            MAP_CENTER: [41.0082, 28.9784], // Istanbul Strait center
+            MAP_ZOOM: 10,
+            MAP_TILE_URL: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            MAP_TILE_ATTRIBUTION: '© OpenStreetMap contributors'
+        };
+        
+        // Map Manager
+        class MapManager {
+            constructor() {
+                this.map = null;
+                this.shipMarkers = {};
+                this.routePolyline = null;
+                this.meetingPointMarker = null;
+            }
+            
+            init() {
+                this.map = L.map('map').setView(MAP_CONFIG.MAP_CENTER, MAP_CONFIG.MAP_ZOOM);
+                L.tileLayer(MAP_CONFIG.MAP_TILE_URL, {
+                    attribution: MAP_CONFIG.MAP_TILE_ATTRIBUTION
+                }).addTo(this.map);
+            }
+            
+            updateShipMarkers() {
+                Object.keys(aisShipManager.ships).forEach(mmsi => {
+                    const ship = aisShipManager.ships[mmsi];
+                    if (this.shipMarkers[mmsi]) {
+                        this.shipMarkers[mmsi].setLatLng([ship.latitude, ship.longitude]);
+                    } else {
+                        this.shipMarkers[mmsi] = L.marker([ship.latitude, ship.longitude]).addTo(this.map);
+                    }
+                });
+            }
+            
+            drawRoute() {
+                if (this.routePolyline) {
+                    this.map.removeLayer(this.routePolyline);
+                }
+                this.routePolyline = L.polyline(currentRouteWaypoints, { color: 'blue' }).addTo(this.map);
+            }
+            
+            drawMeetingPoint() {
+                if (this.meetingPointMarker) {
+                    this.map.removeLayer(this.meetingPointMarker);
+                }
+                if (singleMeetingMarker) {
+                    this.meetingPointMarker = L.marker(singleMeetingMarker).addTo(this.map);
+                }
+            }
+        }
+        
+        // ===== ROUTE CALCULATION AND MANAGEMENT SYSTEM =====
+        
+        // Route Configuration
+        const ROUTE_CONFIG = {
+            WAYPOINTS: [
+                [41.0082, 28.9784], // Istanbul Strait center
+                [41.0182, 28.9884], // Example waypoint 1
+                [41.0282, 28.9984]  // Example waypoint 2
+            ],
+            SPEED: 10 // knots
+        };
+        
+        // Route Manager
+        class RouteManager {
+            constructor() {
+                this.waypoints = ROUTE_CONFIG.WAYPOINTS;
+                this.speed = ROUTE_CONFIG.SPEED;
+            }
+            
+            calculateTotalDistance() {
+                let totalDistance = 0;
+                for (let i = 0; i < this.waypoints.length - 1; i++) {
+                    totalDistance += this.calculateDistance(this.waypoints[i], this.waypoints[i + 1]);
+                }
+                return totalDistance;
+            }
+            
+            calculateDistance(point1, point2) {
+                const R = 6371; // Radius of the Earth in km
+                const dLat = this.deg2rad(point2[0] - point1[0]);
+                const dLon = this.deg2rad(point2[1] - point1[1]);
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                          Math.cos(this.deg2rad(point1[0])) * Math.cos(this.deg2rad(point2[0])) *
+                          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c; // Distance in km
+            }
+            
+            deg2rad(deg) {
+                return deg * (Math.PI / 180);
+            }
+            
+            calculateETA() {
+                return totalRouteDistance / this.speed; // ETA in hours
+            }
+            
+            calculateCurrentPosition() {
+                const distanceCovered = (currentTime / 60) * this.speed; // Distance covered in km
+                let remainingDistance = distanceCovered;
+                for (let i = 0; i < this.waypoints.length - 1; i++) {
+                    const segmentDistance = this.calculateDistance(this.waypoints[i], this.waypoints[i + 1]);
+                    if (remainingDistance <= segmentDistance) {
+                        const fraction = remainingDistance / segmentDistance;
+                        const lat = this.waypoints[i][0] + fraction * (this.waypoints[i + 1][0] - this.waypoints[i][0]);
+                        const lon = this.waypoints[i][1] + fraction * (this.waypoints[i + 1][1] - this.waypoints[i][1]);
+                        return [lat, lon];
+                    }
+                    remainingDistance -= segmentDistance;
+                }
+                return this.waypoints[this.waypoints.length - 1];
+            }
+            
+            calculateMeetingPoint() {
+                // Placeholder for meeting point calculation logic
+                return [41.0182, 28.9884]; // Example meeting point
+            }
+        }
+        
+        // ===== COLLISION DETECTION AND MANAGEMENT SYSTEM =====
+        
+        // Collision Configuration
+        const COLLISION_CONFIG = {
+            WARNING_DISTANCE: 0.5 // Distance in km for collision warning
+        };
                 this.heading = heading || 0;
                 this.vesselType = vesselType || 'unknown';
                 this.timestamp = timestamp;
@@ -1924,55 +2134,43 @@
             
             connectToBackend() {
                 console.log('🔗 Attempting to connect to backend proxy...');
+                console.log('🚢 AIS DEBUG VERSION: 2025-08-30 Enhanced Debugging');
                 console.log('🌐 Backend URL:', AIS_CONFIG.BACKEND_WS_URL);
                 
-                try {
-                    this.websocket = new WebSocket(AIS_CONFIG.BACKEND_WS_URL);
-                    console.log('🔄 WebSocket object created');
-                    this.setupBackendEventHandlers();
-                } catch (error) {
-                    console.error('❌ Backend connection failed:', error);
-                    this.fallbackToDemo();
-                }
-            }
-            
-            connectDirectly() {
-                // Check if running in browser environment
-                if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-                    this.handleConnectionError('CORS_BLOCKED', new Error('AISStream.io blocks browser connections for security reasons'));
-                    return;
-                }
+                // Try /ais path first (as documented)
+                const aisPathUrl = AIS_CONFIG.BACKEND_WS_URL + '/ais';
+                console.log('🔄 Trying /ais path URL:', aisPathUrl);
                 
                 try {
-                    this.websocket = new WebSocket(AIS_CONFIG.WS_URL);
-                    this.setupDirectEventHandlers();
+                    this.websocket = new WebSocket(aisPathUrl);
+                    console.log('🔄 WebSocket object created for /ais path');
+                    this.setupBackendEventHandlers(aisPathUrl);
                 } catch (error) {
-                    this.handleConnectionError('WEBSOCKET_ERROR', error);
+                    console.error('❌ Backend connection failed for /ais path:', error);
+                    // Fall back to root path
+                    console.log('🔄 Falling back to root path URL:', AIS_CONFIG.BACKEND_WS_URL);
+                    try {
+                        this.websocket = new WebSocket(AIS_CONFIG.BACKEND_WS_URL);
+                        console.log('🔄 WebSocket object created for root path');
+                        this.setupBackendEventHandlers(AIS_CONFIG.BACKEND_WS_URL);
+                    } catch (error) {
+                        console.error('❌ Backend connection failed for root path:', error);
+                        this.fallbackToDemo();
+                    }
                 }
             }
             
-            disconnect() {
-                this.isEnabled = false;
-                this.connectionState = 'disconnected';
+            setupBackendEventHandlers(url) {
+                console.log('🔧 Setting up backend event handlers for:', url);
                 
-                if (this.websocket) {
-                    this.websocket.close();
-                    this.websocket = null;
-                }
-                
-                this.updateUI('disconnected', 'AIS Bağlantısı kapalı');
-                
-                // Clear all AIS ships
-                if (this.dataManager) {
-                    this.dataManager.clearAllShips();
-                }
-            }
-            
-            setupBackendEventHandlers() {
-                console.log('🔧 Setting up backend event handlers');
+                // Track connection attempt
+                const connectionStartTime = Date.now();
+                console.log('⏱️ Connection attempt started at:', new Date(connectionStartTime).toISOString());
                 
                 this.websocket.onopen = () => {
-                    console.log('🟢 WebSocket onopen event fired');
+                    const connectionTime = Date.now() - connectionStartTime;
+                    console.log('🟢 WebSocket onopen event fired for:', url);
+                    console.log('⏱️ Connection established in', connectionTime, 'ms');
                     this.connectionState = 'connected';
                     this.reconnectAttempts = 0;
                     this.updateUI('connected', `AIS Aktif (Backend)`);
@@ -2007,13 +2205,17 @@
                 };
                 
                 this.websocket.onerror = (error) => {
-                    console.log('🔴 WebSocket onerror event fired');
+                    const connectionTime = Date.now() - connectionStartTime;
+                    console.log('🔴 WebSocket onerror event fired for:', url);
+                    console.log('⏱️ Error occurred after', connectionTime, 'ms');
                     console.error('❌ Backend WebSocket error:', error);
                     this.fallbackToDemo();
                 };
                 
                 this.websocket.onclose = (event) => {
-                    console.log('🟡 WebSocket onclose event fired');
+                    const connectionTime = Date.now() - connectionStartTime;
+                    console.log('🟡 WebSocket onclose event fired for:', url);
+                    console.log('⏱️ Connection closed after', connectionTime, 'ms');
                     console.log(`🔌 Backend connection closed: ${event.code} - ${event.reason}`);
                     console.log('🗑️ Close event details:', {
                         code: event.code,
@@ -2025,6 +2227,11 @@
                     // Log more details about why connection was closed
                     if (event.code === 1005) {
                         console.error('❌ WebSocket connection closed abnormally - possible authentication or path issue');
+                        console.log('🔧 Troubleshooting tips:');
+                        console.log('   1. Check if the WebSocket URL is correct');
+                        console.log('   2. Verify the backend is running and accessible');
+                        console.log('   3. Check Railway logs for backend errors');
+                        console.log('   4. Ensure the WebSocket path matches backend configuration');
                     } else if (event.code === 1006) {
                         console.error('❌ WebSocket connection failed - network or server issue');
                     } else if (event.code === 4000) {
@@ -2038,6 +2245,38 @@
                         this.scheduleReconnect();
                     }
                 };
+            }
+            
+            connectDirectly() {
+                // Check if running in browser environment
+                if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+                    this.handleConnectionError('CORS_BLOCKED', new Error('AISStream.io blocks browser connections for security reasons'));
+                    return;
+                }
+                
+                try {
+                    this.websocket = new WebSocket(AIS_CONFIG.WS_URL);
+                    this.setupDirectEventHandlers();
+                } catch (error) {
+                    this.handleConnectionError('WEBSOCKET_ERROR', error);
+                }
+            }
+            
+            disconnect() {
+                this.isEnabled = false;
+                this.connectionState = 'disconnected';
+                
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                }
+                
+                this.updateUI('disconnected', 'AIS Bağlantısı kapalı');
+                
+                // Clear all AIS ships
+                if (this.dataManager) {
+                    this.dataManager.clearAllShips();
+                }
             }
             
             setupDirectEventHandlers() {
@@ -2082,7 +2321,7 @@
                 
                 switch (message.type) {
                     case 'ship_update':
-                        console.log('😢 Ship update received:', message.data);
+                        console.log('🚢 Ship update received:', message.data);
                         if (this.onMessageCallback) {
                             console.log('🔗 Calling onMessageCallback with ship data');
                             // Pass the ship data directly since our extractShipData now handles both formats
@@ -2093,38 +2332,39 @@
                         break;
                         
                     case 'status_update':
-                        console.log('📊 Status update:', message.status, message.message);
-                        if (message.status === 'demo') {
-                            this.updateUI('demo', '🎭 Backend Demo Modu - Örnek veriler');
-                        } else {
-                            this.updateUI(message.status, message.message);
+                        console.log('📊 Status update received:', message);
+                        // Update UI with status information
+                        if (message.status === 'connected') {
+                            console.log('📡 Backend connection confirmed, ships available:', message.shipCount);
                         }
                         break;
                         
-                    case 'ship_remove':
-                        console.log('🗑️ Ship remove:', message.mmsi);
-                        if (this.dataManager) {
-                            this.dataManager.removeShip(message.mmsi);
-                        }
-                        break;
-                    
                     default:
-                        console.log('❓ Unknown message type:', message.type);
-                        // If it's a direct ship object without type wrapper
-                        if (message.mmsi && message.latitude && message.longitude) {
-                            console.log('😢 Direct ship data received:', message);
-                            if (this.onMessageCallback) {
-                                this.onMessageCallback(message);
-                            }
-                        }
+                        console.log('❓ Unknown message type received:', message.type);
                         break;
                 }
             }
             
+            // Enhanced fallback to demo with more detailed logging
             fallbackToDemo() {
                 console.log('🎭 Backend unavailable, falling back to demo mode...');
-                AIS_CONFIG.BACKEND_AVAILABLE = false;
-                this.handleConnectionError('BACKEND_UNAVAILABLE', new Error('Backend proxy not available'));
+                console.log('📊 Current connection state:', this.connectionState);
+                console.log('📊 Reconnect attempts:', this.reconnectAttempts);
+                console.log('📊 Backend URL attempted:', AIS_CONFIG.BACKEND_WS_URL);
+                
+                this.connectionState = 'demo';
+                this.updateUI('demo', 'AIS Demo Mode');
+                
+                // Clear any existing WebSocket
+                if (this.websocket) {
+                    this.websocket.close();
+                    this.websocket = null;
+                }
+                
+                // Start demo mode
+                this.startDemoMode();
+                
+                console.log('🔄 Demo mode activated with simulated ships');
             }
             
             scheduleReconnect() {
@@ -4694,5 +4934,7 @@
             setTimeout(initializePerformanceOptimizations, 500);
         });
     </script>
+</body>
+</html>    </script>
 </body>
 </html>
