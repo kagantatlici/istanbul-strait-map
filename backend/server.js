@@ -1,6 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 const cors = require('cors');
+const fetch = require('node-fetch').default || require('node-fetch');
 require('dotenv').config();
 
 const app = express();
@@ -42,16 +43,24 @@ class AISProxyServer {
         this.startCleanupProcess();
     }
     
-    // Connect to AISStream.io
+    // Connect to AISStream.io or fallback to local data bridge
     connectToAISStream() {
         if (this.aisConnection && this.aisConnection.readyState === WebSocket.OPEN) {
             return;
         }
         
+        // Check if we're running on Railway (or other cloud provider)
+        if (process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production') {
+            console.log('🚂 Detected Railway/cloud environment - AISStream.io blocks cloud IPs');
+            console.log('⚡ Skipping AISStream.io and using local bridge directly');
+            this.tryLocalDataBridge();
+            return;
+        }
+        
         // Check if required environment variables are available
         if (!process.env.AISSTREAM_WS_URL || !process.env.AISSTREAM_API_KEY) {
-            console.log('⚠️  Missing AIS environment variables, starting demo mode...');
-            this.handleConnectionFailure();
+            console.log('⚠️  Missing AIS environment variables, checking for local data bridge...');
+            this.tryLocalDataBridge();
             return;
         }
         
@@ -62,7 +71,103 @@ class AISProxyServer {
             this.setupAISEventHandlers();
         } catch (error) {
             console.error('❌ Failed to connect to AISStream.io:', error);
+            this.tryLocalDataBridge();
+        }
+    }
+    
+    // Try to fetch from local data bridge
+    async tryLocalDataBridge() {
+        const localBridgeURL = process.env.LOCAL_AIS_BRIDGE_URL || 'http://localhost:3002';
+        
+        try {
+            console.log('🔍 Trying local AIS data bridge...');
+            const response = await fetch(`${localBridgeURL}/ais/status`);
+            
+            if (response.ok) {
+                const status = await response.json();
+                console.log('✅ Local AIS bridge found:', status);
+                this.startLocalDataPolling(localBridgeURL);
+            } else {
+                throw new Error(`Bridge responded with ${response.status}`);
+            }
+        } catch (error) {
+            console.log('❌ Local bridge not available:', error.message);
+            console.log('🎭 Starting demo mode...');
             this.handleConnectionFailure();
+        }
+    }
+    
+    // Poll local data bridge periodically
+    startLocalDataPolling(bridgeURL) {
+        this.isConnected = 'bridge';
+        this.broadcastStatus('connected', 'Connected to local AIS bridge');
+        
+        // Initial fetch
+        this.fetchFromLocalBridge(bridgeURL);
+        
+        // Set up polling every 2 minutes
+        this.bridgePollingInterval = setInterval(() => {
+            this.fetchFromLocalBridge(bridgeURL);
+        }, 120000); // 2 minutes
+        
+        console.log('🔄 Started polling local AIS bridge every 2 minutes');
+    }
+    
+    // Fetch ships from local bridge
+    async fetchFromLocalBridge(bridgeURL) {
+        try {
+            const response = await fetch(`${bridgeURL}/ais/ships`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`📡 Fetched ${data.ships.length} ships from local bridge`);
+                
+                // Process each ship
+                data.ships.forEach(ship => {
+                    this.processBridgeShip(ship);
+                });
+                
+                // Clean up old ships not in current data
+                this.cleanupMissingShips(data.ships);
+                
+            } else {
+                console.error('❌ Failed to fetch from local bridge:', response.status);
+            }
+        } catch (error) {
+            console.error('❌ Bridge fetch error:', error.message);
+        }
+    }
+    
+    // Process ship from bridge data
+    processBridgeShip(ship) {
+        const shipData = {
+            mmsi: ship.mmsi,
+            shipName: ship.shipName,
+            latitude: ship.latitude,
+            longitude: ship.longitude,
+            heading: ship.heading,
+            speed: ship.speed,
+            vesselType: this.categorizeVesselType(ship.vesselType),
+            destination: 'Unknown',
+            lastUpdate: Date.now(),
+            timestamp: new Date().toISOString()
+        };
+        
+        this.shipData.set(ship.mmsi, shipData);
+        this.broadcastShipUpdate(shipData);
+    }
+    
+    // Clean up ships not in current bridge data
+    cleanupMissingShips(currentShips) {
+        const currentMMSIs = new Set(currentShips.map(ship => ship.mmsi));
+        
+        for (const [mmsi, ship] of this.shipData.entries()) {
+            if (!currentMMSIs.has(mmsi)) {
+                // Remove ships not in current data after 5 minutes
+                if (Date.now() - ship.lastUpdate > 300000) {
+                    this.shipData.delete(mmsi);
+                }
+            }
         }
     }
     
@@ -434,7 +539,9 @@ class AISProxyServer {
     getStats() {
         return {
             connected: this.isConnected,
-            mode: this.isConnected === 'demo' ? 'demo' : (this.isConnected ? 'live' : 'disconnected'),
+            mode: this.isConnected === 'bridge' ? 'bridge' : 
+                  this.isConnected === 'demo' ? 'demo' : 
+                  (this.isConnected ? 'live' : 'disconnected'),
             clientCount: this.clients.size,
             shipCount: this.shipData.size,
             reconnectAttempts: this.reconnectAttempts,

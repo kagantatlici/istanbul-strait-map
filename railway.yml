@@ -1,0 +1,32 @@
+services:
+  backend:
+    name: "istanbul-strait-ais-proxy"
+    source: 
+      workdir: "backend"
+    build:
+      command: "npm install"
+    run:
+      command: "npm start"
+    env:
+      NODE_ENV: "production"
+    
+    # Health check
+    healthcheck:
+      path: "/health"
+      interval: 30
+      timeout: 10
+      retries: 3
+      
+    # Resource allocation
+    memory: 512
+    cpu: 0.5
+    
+    # Networking
+    ports:
+      - port: 3001
+        public: true
+        
+    # Auto-scaling (optional)
+    scaling:
+      min: 1
+      max: 2
