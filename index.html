@@ -1907,6 +1907,12 @@
                 this.connectionState = 'connecting';
                 this.updateUI('connecting', 'AIS Bağlantısı kuruluyor...');
                 
+                // Check if running in browser environment
+                if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+                    this.handleConnectionError('CORS_BLOCKED', new Error('AISStream.io blocks browser connections for security reasons'));
+                    return;
+                }
+                
                 try {
                     this.websocket = new WebSocket(AIS_CONFIG.WS_URL);
                     this.setupEventHandlers();
@@ -1999,6 +2005,7 @@
                 
                 const errorMessages = {
                     'WEBSOCKET_ERROR': 'WebSocket bağlantı hatası',
+                    'CORS_BLOCKED': 'AIS Demo Modu (Gerçek veriler için backend gerekli)',
                     'INVALID_API_KEY': 'API key geçersiz',
                     'RATE_LIMIT': 'Rate limit aşıldı',
                     'NETWORK_ERROR': 'Ağ bağlantı sorunu',
@@ -2006,7 +2013,14 @@
                 };
                 
                 const message = errorMessages[errorType] || 'Bilinmeyen hata';
-                this.updateUI('error', message);
+                
+                // For CORS issues, show demo mode and start simulation
+                if (errorType === 'CORS_BLOCKED') {
+                    this.updateUI('demo', message);
+                    this.startDemoMode();
+                } else {
+                    this.updateUI('error', message);
+                }
                 
                 console.error(`AIS Error (${errorType}):`, error);
             }
@@ -2029,6 +2043,54 @@
             
             getConnectionState() {
                 return this.connectionState;
+            }
+            
+            startDemoMode() {
+                // Start demo mode with simulated AIS data
+                this.updateUI('demo', 'AIS Demo Modu - Örnek veriler gösteriliyor');
+                
+                // Create demo ships with realistic data for Istanbul Strait
+                const demoShips = [
+                    {
+                        mmsi: '271002099',
+                        shipName: 'DEMO CARGO VESSEL',
+                        latitude: 41.0335,
+                        longitude: 29.0095,
+                        heading: 45,
+                        speed: 8.5,
+                        vesselType: 'Cargo',
+                        lastUpdate: Date.now()
+                    },
+                    {
+                        mmsi: '271002100',
+                        shipName: 'DEMO TANKER',
+                        latitude: 41.0285,
+                        longitude: 29.0145,
+                        heading: 225,
+                        speed: 6.2,
+                        vesselType: 'Tanker',
+                        lastUpdate: Date.now()
+                    },
+                    {
+                        mmsi: '271002101',
+                        shipName: 'DEMO FERRY',
+                        latitude: 41.0385,
+                        longitude: 29.0065,
+                        heading: 135,
+                        speed: 12.0,
+                        vesselType: 'Passenger',
+                        lastUpdate: Date.now()
+                    }
+                ];
+                
+                // Add demo ships to map
+                if (this.dataManager) {
+                    demoShips.forEach(ship => {
+                        this.dataManager.addOrUpdateShip(ship);
+                    });
+                }
+                
+                console.log('AIS Demo mode activated with simulated ships');
             }
         }
         
@@ -2519,6 +2581,9 @@
                         case 'connected':
                             displayMessage = `✅ AIS Aktif - ${shipCount} gemi`;
                             break;
+                        case 'demo':
+                            displayMessage = '🎭 ' + message;
+                            break;
                         case 'disconnected':
                             displayMessage = '❌ AIS Bağlantısı kapalı';
                             break;
@@ -2544,6 +2609,7 @@
                 const colors = {
                     'connecting': '#ff9800',
                     'connected': '#4caf50',
+                    'demo': '#2196F3',
                     'disconnected': '#666',
                     'error': '#f44336',
                     'no_data': '#9e9e9e'
