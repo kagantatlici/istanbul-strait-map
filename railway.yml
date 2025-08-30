@@ -4,7 +4,7 @@ services:
     source: 
       workdir: "backend"
     build:
-      command: "npm install"
+      command: "npm ci --only=production"
     run:
       command: "npm start"
     env:

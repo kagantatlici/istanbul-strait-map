@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy backend files
 COPY backend/package*.json ./
 COPY backend/server.js ./
-COPY backend/.env ./
+COPY backend/ais-data-bridge.js ./
 
 # Install dependencies
 RUN npm ci --only=production

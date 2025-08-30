@@ -1,7 +1,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 const cors = require('cors');
-const fetch = require('node-fetch').default || require('node-fetch');
+// Using built-in fetch available in Node.js 18+
 require('dotenv').config();
 
 const app = express();
@@ -585,8 +585,8 @@ const server = require('http').createServer(app);
 
 // Create WebSocket server
 const wss = new WebSocket.Server({ 
-    server,
-    path: '/ais'
+    server
+    // No custom path for Railway compatibility
 });
 
 // Handle WebSocket connections
@@ -607,7 +607,7 @@ wss.on('connection', (ws, req) => {
 server.listen(PORT, () => {
     console.log('🚀 Istanbul Strait AIS Proxy Server started');
     console.log(`📍 Server running on port ${PORT}`);
-    console.log(`🌐 WebSocket endpoint: ws://localhost:${PORT}/ais`);
+    console.log(`🌐 WebSocket endpoint: ws://localhost:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/health`);
     console.log(`📈 Stats: http://localhost:${PORT}/stats`);
     
