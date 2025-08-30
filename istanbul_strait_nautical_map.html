@@ -1977,9 +1977,11 @@
                 this.websocket.onmessage = (event) => {
                     try {
                         const message = JSON.parse(event.data);
+                        console.log('📨 Raw backend message received:', message);
                         this.processBackendMessage(message);
                     } catch (error) {
                         console.error('❌ Backend message parse error:', error);
+                        console.log('❌ Raw message data:', event.data);
                     }
                 };
                 
@@ -2038,32 +2040,19 @@
             }
             
             processBackendMessage(message) {
+                console.log('🔄 Processing backend message type:', message.type);
+                
                 switch (message.type) {
                     case 'ship_update':
+                        console.log('😢 Ship update received:', message.data);
                         if (this.onMessageCallback) {
-                            // Convert backend format to expected format
-                            const aisData = {
-                                MessageType: 'PositionReport',
-                                Message: {
-                                    PositionReport: {
-                                        UserID: parseInt(message.data.mmsi),
-                                        TrueHeading: message.data.heading,
-                                        SpeedOverGround: message.data.speed
-                                    }
-                                },
-                                Metadata: {
-                                    ShipName: message.data.shipName,
-                                    Latitude: message.data.latitude,
-                                    Longitude: message.data.longitude,
-                                    VesselType: message.data.vesselType,
-                                    Destination: message.data.destination
-                                }
-                            };
-                            this.onMessageCallback(aisData);
+                            // Pass the ship data directly since our extractShipData now handles both formats
+                            this.onMessageCallback(message.data);
                         }
                         break;
                         
                     case 'status_update':
+                        console.log('📊 Status update:', message.status, message.message);
                         if (message.status === 'demo') {
                             this.updateUI('demo', '🎭 Backend Demo Modu - Örnek veriler');
                         } else {
@@ -2072,8 +2061,20 @@
                         break;
                         
                     case 'ship_remove':
+                        console.log('🗑️ Ship remove:', message.mmsi);
                         if (this.dataManager) {
                             this.dataManager.removeShip(message.mmsi);
+                        }
+                        break;
+                    
+                    default:
+                        console.log('❓ Unknown message type:', message.type);
+                        // If it's a direct ship object without type wrapper
+                        if (message.mmsi && message.latitude && message.longitude) {
+                            console.log('😢 Direct ship data received:', message);
+                            if (this.onMessageCallback) {
+                                this.onMessageCallback(message);
+                            }
                         }
                         break;
                 }

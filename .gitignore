@@ -1,6 +1,161 @@
+                this.websocket.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        console.log('📨 Raw backend message received:', message);
+                        this.processBackendMessage(message);
+                    } catch (error) {
+                        console.error('❌ Backend message parse error:', error);
+                        console.log('❌ Raw message data:', event.data);
+                    }
+                };            processBackendMessage(message) {
+                console.log('🔄 Processing backend message type:', message.type);
+                
+                switch (message.type) {
+                    case 'ship_update':
+                        console.log('🚢 Ship update received:', message.data);
+                        if (this.onMessageCallback) {
+                            // Pass the ship data directly since our extractShipData now handles both formats
+                            this.onMessageCallback(message.data);
+                        }
+                        break;
+                        
+                    case 'status_update':
+                        console.log('📊 Status update:', message.status, message.message);
+                        if (message.status === 'demo') {
+                            this.updateUI('demo', '🎭 Backend Demo Modu - Örnek veriler');
+                        } else {
+                            this.updateUI(message.status, message.message);
+                        }
+                        break;
+                        
+                    case 'ship_remove':
+                        console.log('🗑️ Ship remove:', message.mmsi);
+                        if (this.dataManager) {
+                            this.dataManager.removeShip(message.mmsi);
+                        }
+                        break;
+                    
+                    default:
+                        console.log('❓ Unknown message type:', message.type);
+                        // If it's a direct ship object without type wrapper
+                        if (message.mmsi && message.latitude && message.longitude) {
+                            console.log('🚢 Direct ship data received:', message);
+                            if (this.onMessageCallback) {
+                                this.onMessageCallback(message);
+                            }
+                        }
+                        break;
+                }
+            }// ... existing code ...
+                this.websocket.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        console.log('📨 Raw backend message received:', message);
+                        this.processBackendMessage(message);
+                    } catch (error) {
+                        console.error('❌ Backend message parse error:', error);
+                        console.log('❌ Raw message data:', event.data);
+                    }
+                };
+// ... existing code ...            processBackendMessage(message) {
+                console.log('🔄 Processing backend message type:', message.type);
+                
+                switch (message.type) {
+                    case 'ship_update':
+                        console.log('🚢 Ship update received:', message.data);
+                        if (this.onMessageCallback) {
+                            // Pass the ship data directly since our extractShipData now handles both formats
+                            this.onMessageCallback(message.data);
+                        }
+                        break;
+                        
+                    case 'status_update':
+                        console.log('📊 Status update:', message.status, message.message);
+                        if (message.status === 'demo') {
+                            this.updateUI('demo', '🎭 Backend Demo Modu - Örnek veriler');
+                        } else {
+                            this.updateUI(message.status, message.message);
+                        }
+                        break;
+                        
+                    case 'ship_remove':
+                        console.log('🗑️ Ship remove:', message.mmsi);
+                        if (this.dataManager) {
+                            this.dataManager.removeShip(message.mmsi);
+                        }
+                        break;
+                    
+                    default:
+                        console.log('❓ Unknown message type:', message.type);
+                        // If it's a direct ship object without type wrapper
+                        if (message.mmsi && message.latitude && message.longitude) {
+                            console.log('🚢 Direct ship data received:', message);
+                            if (this.onMessageCallback) {
+                                this.onMessageCallback(message);
+                            }
+                        }
+                        break;
+                }
+            }# Dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build outputs
 dist/
 build/
+out/
+
+# IDE and editor files
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Custom directories
 serena/
+
+# AI assistant directories
+.claude/
+.gemini/
+.qoder/
+.qwen/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
 
