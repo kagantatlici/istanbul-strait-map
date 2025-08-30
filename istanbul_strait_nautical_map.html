@@ -1924,6 +1924,7 @@
             
             connectToBackend() {
                 console.log('🔗 Attempting to connect to backend proxy...');
+                console.log('🌐 Backend URL:', AIS_CONFIG.BACKEND_WS_URL);
                 
                 try {
                     this.websocket = new WebSocket(AIS_CONFIG.BACKEND_WS_URL);
@@ -1972,6 +1973,7 @@
                     this.reconnectAttempts = 0;
                     this.updateUI('connected', `AIS Aktif (Backend)`);
                     console.log('✅ Connected to backend AIS proxy');
+                    console.log('📊 Backend should now send demo ship data...');
                 };
                 
                 this.websocket.onmessage = (event) => {
@@ -1991,10 +1993,16 @@
                 };
                 
                 this.websocket.onclose = (event) => {
-                    console.log(`🔌 Backend connection closed: ${event.code}`);
+                    console.log(`🔌 Backend connection closed: ${event.code} - ${event.reason}`);
+                    console.log('🗑️ Close event details:', {
+                        code: event.code,
+                        reason: event.reason,
+                        wasClean: event.wasClean
+                    });
                     this.connectionState = 'disconnected';
                     
                     if (event.code === 1006 || !this.isEnabled) {
+                        console.log('🎭 Connection failed, falling back to demo mode...');
                         this.fallbackToDemo();
                     } else if (this.isEnabled && this.reconnectAttempts < AIS_CONFIG.MAX_RECONNECT_ATTEMPTS) {
                         this.scheduleReconnect();
