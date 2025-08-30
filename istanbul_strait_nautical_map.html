@@ -1974,12 +1974,26 @@
                     this.updateUI('connected', `AIS Aktif (Backend)`);
                     console.log('✅ Connected to backend AIS proxy');
                     console.log('📊 Backend should now send demo ship data...');
+                    
+                    // Request ship data from backend
+                    console.log('📡 Requesting current ship data from backend...');
+                    this.websocket.send(JSON.stringify({ type: 'request_ships' }));
+                    
+                    // Set up timeout to check if we receive data
+                    setTimeout(() => {
+                        if (this.dataManager && this.dataManager.getShipCount() === 0) {
+                            console.warn('⚠️ No ship data received after 10 seconds - backend might not be sending data');
+                            console.log('🔍 Current ship count:', this.dataManager.getShipCount());
+                            console.log('🔗 Connection state:', this.connectionState);
+                        }
+                    }, 10000);
                 };
                 
                 this.websocket.onmessage = (event) => {
                     try {
                         const message = JSON.parse(event.data);
                         console.log('📨 Raw backend message received:', message);
+                        console.log('🔍 Message type:', message.type, 'Data length:', JSON.stringify(message).length, 'chars');
                         this.processBackendMessage(message);
                     } catch (error) {
                         console.error('❌ Backend message parse error:', error);
