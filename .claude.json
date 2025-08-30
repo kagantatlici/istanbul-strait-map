@@ -1,0 +1,21 @@
+{
+  "projects": {
+    ".": {
+      "mcp": [
+        {
+          "name": "context7",
+          "transport": "http",
+          "url": "https://mcp.context7.com/mcp",
+          "headers": {
+            "CONTEXT7_API_KEY": "ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"
+          }
+        },
+        {
+          "name": "filesystem",
+          "transport": "local",
+          "command": "filesystem"
+        }
+      ]
+    }
+  }
+}

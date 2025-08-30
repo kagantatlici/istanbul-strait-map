@@ -1851,9 +1851,16 @@
         
         // AIS Configuration
         const AIS_CONFIG = {
+            // Backend proxy configuration (preferred)
+            BACKEND_WS_URL: 'ws://localhost:3001/ais',
+            BACKEND_AVAILABLE: true,
+            
+            // Direct AISStream.io configuration (fallback - blocked by CORS)
             WS_URL: 'wss://stream.aisstream.io/v0/stream',
             API_KEY: 'd9f7e48524cd9b6f07f782a19968d1d01fda4274',
             BOUNDING_BOX: [40.85, 28.75, 41.25, 29.30], // Istanbul Strait boundaries
+            
+            // Connection settings
             RECONNECT_INTERVAL: 5000,
             MAX_RECONNECT_ATTEMPTS: 10,
             MAX_SHIPS: 50,
@@ -1907,6 +1914,27 @@
                 this.connectionState = 'connecting';
                 this.updateUI('connecting', 'AIS Bağlantısı kuruluyor...');
                 
+                // Try backend proxy first
+                if (AIS_CONFIG.BACKEND_AVAILABLE) {
+                    this.connectToBackend();
+                } else {
+                    this.connectDirectly();
+                }
+            }
+            
+            connectToBackend() {
+                console.log('🔗 Attempting to connect to backend proxy...');
+                
+                try {
+                    this.websocket = new WebSocket(AIS_CONFIG.BACKEND_WS_URL);
+                    this.setupBackendEventHandlers();
+                } catch (error) {
+                    console.error('❌ Backend connection failed:', error);
+                    this.fallbackToDemo();
+                }
+            }
+            
+            connectDirectly() {
                 // Check if running in browser environment
                 if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
                     this.handleConnectionError('CORS_BLOCKED', new Error('AISStream.io blocks browser connections for security reasons'));
@@ -1915,7 +1943,7 @@
                 
                 try {
                     this.websocket = new WebSocket(AIS_CONFIG.WS_URL);
-                    this.setupEventHandlers();
+                    this.setupDirectEventHandlers();
                 } catch (error) {
                     this.handleConnectionError('WEBSOCKET_ERROR', error);
                 }
@@ -1938,7 +1966,41 @@
                 }
             }
             
-            setupEventHandlers() {
+            setupBackendEventHandlers() {
+                this.websocket.onopen = () => {
+                    this.connectionState = 'connected';
+                    this.reconnectAttempts = 0;
+                    this.updateUI('connected', `AIS Aktif (Backend)`);
+                    console.log('✅ Connected to backend AIS proxy');
+                };
+                
+                this.websocket.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.processBackendMessage(message);
+                    } catch (error) {
+                        console.error('❌ Backend message parse error:', error);
+                    }
+                };
+                
+                this.websocket.onerror = (error) => {
+                    console.error('❌ Backend WebSocket error:', error);
+                    this.fallbackToDemo();
+                };
+                
+                this.websocket.onclose = (event) => {
+                    console.log(`🔌 Backend connection closed: ${event.code}`);
+                    this.connectionState = 'disconnected';
+                    
+                    if (event.code === 1006 || !this.isEnabled) {
+                        this.fallbackToDemo();
+                    } else if (this.isEnabled && this.reconnectAttempts < AIS_CONFIG.MAX_RECONNECT_ATTEMPTS) {
+                        this.scheduleReconnect();
+                    }
+                };
+            }
+            
+            setupDirectEventHandlers() {
                 this.websocket.onopen = () => {
                     this.connectionState = 'connected';
                     this.reconnectAttempts = 0;
@@ -1975,16 +2037,52 @@
                 };
             }
             
-            sendSubscription() {
-                const subscriptionMessage = {
-                    APIKey: AIS_CONFIG.API_KEY,
-                    BoundingBoxes: [AIS_CONFIG.BOUNDING_BOX],
-                    FiltersShipAndCargo: true,
-                    FilterMessageTypes: ["PositionReport"]
-                };
-                
-                this.websocket.send(JSON.stringify(subscriptionMessage));
-                console.log('AIS subscription sent:', subscriptionMessage);
+            processBackendMessage(message) {
+                switch (message.type) {
+                    case 'ship_update':
+                        if (this.onMessageCallback) {
+                            // Convert backend format to expected format
+                            const aisData = {
+                                MessageType: 'PositionReport',
+                                Message: {
+                                    PositionReport: {
+                                        UserID: parseInt(message.data.mmsi),
+                                        TrueHeading: message.data.heading,
+                                        SpeedOverGround: message.data.speed
+                                    }
+                                },
+                                Metadata: {
+                                    ShipName: message.data.shipName,
+                                    Latitude: message.data.latitude,
+                                    Longitude: message.data.longitude,
+                                    VesselType: message.data.vesselType,
+                                    Destination: message.data.destination
+                                }
+                            };
+                            this.onMessageCallback(aisData);
+                        }
+                        break;
+                        
+                    case 'status_update':
+                        if (message.status === 'demo') {
+                            this.updateUI('demo', '🎭 Backend Demo Modu - Örnek veriler');
+                        } else {
+                            this.updateUI(message.status, message.message);
+                        }
+                        break;
+                        
+                    case 'ship_remove':
+                        if (this.dataManager) {
+                            this.dataManager.removeShip(message.mmsi);
+                        }
+                        break;
+                }
+            }
+            
+            fallbackToDemo() {
+                console.log('🎭 Backend unavailable, falling back to demo mode...');
+                AIS_CONFIG.BACKEND_AVAILABLE = false;
+                this.handleConnectionError('BACKEND_UNAVAILABLE', new Error('Backend proxy not available'));
             }
             
             scheduleReconnect() {
@@ -2006,6 +2104,7 @@
                 const errorMessages = {
                     'WEBSOCKET_ERROR': 'WebSocket bağlantı hatası',
                     'CORS_BLOCKED': 'AIS Demo Modu (Gerçek veriler için backend gerekli)',
+                    'BACKEND_UNAVAILABLE': 'AIS Demo Modu (Backend mevcut değil)',
                     'INVALID_API_KEY': 'API key geçersiz',
                     'RATE_LIMIT': 'Rate limit aşıldı',
                     'NETWORK_ERROR': 'Ağ bağlantı sorunu',
@@ -2014,8 +2113,8 @@
                 
                 const message = errorMessages[errorType] || 'Bilinmeyen hata';
                 
-                // For CORS issues, show demo mode and start simulation
-                if (errorType === 'CORS_BLOCKED') {
+                // For connection issues, show demo mode and start simulation
+                if (errorType === 'CORS_BLOCKED' || errorType === 'BACKEND_UNAVAILABLE') {
                     this.updateUI('demo', message);
                     this.startDemoMode();
                 } else {

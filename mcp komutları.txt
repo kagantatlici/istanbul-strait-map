@@ -1,0 +1,15 @@
+claude mcp add serena /Users/kagantatlici/miniconda3/envs/py311/bin/serena start-mcp-server
+claude mcp add playwright playwright-mcp
+claude mcp add context7 --transport http https://mcp.context7.com/mcp --header "CONTEXT7_API_KEY:ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"
+claude mcp add git mcp-git
+
+qwen mcp add serena /Users/kagantatlici/miniconda3/envs/py311/bin/serena start-mcp-server
+qwen mcp add playwright playwright-mcp
+qwen mcp add context7 --transport http https://mcp.context7.com/mcp --header "CONTEXT7_API_KEY:ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"
+qwen mcp add git mcp-git
+
+
+gemini mcp add serena /Users/kagantatlici/miniconda3/envs/py311/bin/serena start-mcp-server
+gemini mcp add playwright playwright-mcp
+gemini mcp add context7 --transport http https://mcp.context7.com/mcp --header "CONTEXT7_API_KEY:ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"
+gemini mcp add git mcp-git

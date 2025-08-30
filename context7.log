@@ -1,1 +1,0 @@
-The --api-key flag is not allowed when using --transport http. Use header-based auth at the HTTP layer instead.

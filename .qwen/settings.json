@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "context7": {
+      "httpUrl": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-49c15e60-4177-44a3-b900-0659ed6d20de"
+      }
+    },
+    "serena": {
+      "command": "/Users/kagantatlici/miniconda3/envs/py311/bin/serena",
+      "args": [
+        "start-mcp-server"
+      ]
+    },
+    "playwright": {
+      "command": "playwright-mcp",
+      "args": []
+    },
+    "git": {
+      "command": "mcp-git",
+      "args": []
+    }
+  }
+}
