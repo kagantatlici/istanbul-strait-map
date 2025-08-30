@@ -2387,15 +2387,20 @@
             
             processMessage(data) {
                 try {
-                    // Validate message structure
-                    if (!data || !data.Message) {
-                        return;
-                    }
+                    // Handle both direct AISStream format and backend processed format
+                    let message;
                     
-                    const message = data.Message;
-                    
-                    // Only process position reports
-                    if (!message.PositionReport) {
+                    if (data.Message && data.Message.PositionReport) {
+                        // Direct AISStream.io format
+                        message = data;
+                        console.log('📡 Processing AISStream.io format message');
+                    } else if (data.mmsi && data.latitude && data.longitude) {
+                        // Backend processed format - ship data is directly in data object
+                        message = data;
+                        console.log('📡 Processing backend processed format message:', data.mmsi);
+                    } else {
+                        // Invalid format
+                        console.warn('❌ Invalid message format:', data);
                         return;
                     }
                     
@@ -2404,6 +2409,9 @@
                     
                     if (shipData && this.validateShipData(shipData) && this.isWithinBounds(shipData)) {
                         this.dataManager.addOrUpdateShip(shipData);
+                        console.log(`✅ Added/Updated ship: ${shipData.shipName} (${shipData.mmsi}) at ${shipData.latitude.toFixed(4)}, ${shipData.longitude.toFixed(4)}`);
+                    } else {
+                        console.warn('❌ Ship data validation failed:', shipData);
                     }
                 } catch (error) {
                     console.error('AIS message processing error:', error);
@@ -2412,22 +2420,57 @@
             
             extractShipData(message) {
                 try {
-                    const positionReport = message.PositionReport;
-                    const metaData = message.MetaData || {};
-                    const shipAndCargoType = metaData.ShipAndCargoType || {};
+                    // Handle both direct AISStream format and backend processed format
+                    let mmsi, shipName, latitude, longitude, speed, heading, vesselType, timestamp;
+                    
+                    if (message.Message && message.Message.PositionReport) {
+                        // Direct AISStream.io format
+                        const positionReport = message.Message.PositionReport;
+                        const metaData = message.Metadata || {};
+                        
+                        mmsi = positionReport.UserID ? positionReport.UserID.toString() : null;
+                        shipName = metaData.ShipName || `Ship ${positionReport.UserID}`;
+                        latitude = metaData.Latitude;
+                        longitude = metaData.Longitude;
+                        speed = positionReport.SpeedOverGround || 0;
+                        heading = positionReport.TrueHeading || positionReport.CourseOverGround || 0;
+                        vesselType = metaData.VesselType || 'other';
+                        timestamp = new Date(metaData.time_utc || Date.now());
+                        
+                        console.log('🔍 Extracted AISStream data:', { mmsi, shipName, latitude, longitude });
+                    } else {
+                        // Backend processed format (from Railway demo mode)
+                        mmsi = message.mmsi ? message.mmsi.toString() : null;
+                        shipName = message.shipName || message.name || `Ship ${message.mmsi}`;
+                        latitude = parseFloat(message.latitude);
+                        longitude = parseFloat(message.longitude);
+                        speed = parseFloat(message.speed) || 0;
+                        heading = parseFloat(message.heading) || 0;
+                        vesselType = message.vesselType || message.type || 'other';
+                        timestamp = new Date(message.timestamp || message.lastUpdate || Date.now());
+                        
+                        console.log('🔍 Extracted backend data:', { mmsi, shipName, latitude, longitude });
+                    }
+                    
+                    // Validate essential fields
+                    if (!mmsi || isNaN(latitude) || isNaN(longitude)) {
+                        console.warn('❌ Missing essential ship data:', { mmsi, latitude, longitude });
+                        return null;
+                    }
                     
                     // Create ship data object
                     const shipData = new AISShipData(
-                        message.UserID ? message.UserID.toString() : null,
-                        shipAndCargoType.ShipName || `Ship ${message.UserID}`,
-                        positionReport.Latitude,
-                        positionReport.Longitude,
-                        positionReport.SpeedOverGround || 0,
-                        positionReport.TrueHeading || positionReport.CourseOverGround || 0,
-                        this.parseVesselType(shipAndCargoType.ShipAndCargoType),
-                        new Date(metaData.time_utc || Date.now())
+                        mmsi,
+                        shipName,
+                        latitude,
+                        longitude,
+                        speed,
+                        heading,
+                        vesselType,
+                        timestamp
                     );
                     
+                    console.log('✅ Created ship data object:', shipData);
                     return shipData;
                 } catch (error) {
                     console.error('Error extracting ship data:', error);
