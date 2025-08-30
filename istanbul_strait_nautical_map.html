@@ -2068,8 +2068,11 @@
                     case 'ship_update':
                         console.log('😢 Ship update received:', message.data);
                         if (this.onMessageCallback) {
+                            console.log('🔗 Calling onMessageCallback with ship data');
                             // Pass the ship data directly since our extractShipData now handles both formats
                             this.onMessageCallback(message.data);
+                        } else {
+                            console.error('❌ onMessageCallback is not set!');
                         }
                         break;
                         
@@ -2246,29 +2249,40 @@
             }
             
             addOrUpdateShip(shipData) {
+                console.log('😢 AISDataManager.addOrUpdateShip called for:', shipData.shipName);
                 const existing = this.shipData.get(shipData.mmsi);
                 
                 // Update ship data
                 this.shipData.set(shipData.mmsi, shipData);
+                console.log('📊 Ship data updated. Total ships in memory:', this.shipData.size);
                 
                 // Check if ship type is filtered
                 if (!this.isShipTypeVisible(shipData.vesselType)) {
+                    console.log('🙄 Ship type filtered out:', shipData.vesselType);
                     return;
                 }
                 
                 // Update or create marker
+                console.log('🗺️ Creating/updating marker for ship:', shipData.shipName);
                 this.updateShipMarker(shipData);
                 
                 // Enforce ship limits
                 this.enforceShipLimit();
+                
+                console.log('✅ Ship successfully processed. Visible ships:', this.getVisibleShipCount());
             }
             
             updateShipMarker(shipData) {
-                if (!this.markerManager) return;
+                console.log('🗺️ updateShipMarker called for:', shipData.shipName);
+                if (!this.markerManager) {
+                    console.error('❌ markerManager is not set!');
+                    return;
+                }
                 
                 let marker = this.shipMarkers.get(shipData.mmsi);
                 
                 if (marker) {
+                    console.log('🔄 Updating existing marker for:', shipData.shipName);
                     // Update existing marker
                     marker.setLatLng([shipData.latitude, shipData.longitude]);
                     
@@ -2285,10 +2299,13 @@
                     const popupContent = this.markerManager.createPopupContent(shipData);
                     marker.setPopupContent(popupContent);
                 } else {
+                    console.log('✨ Creating new marker for:', shipData.shipName);
                     // Create new marker
                     marker = this.markerManager.createShipMarker(shipData);
+                    console.log('🎨 Marker created:', marker ? 'success' : 'failed');
                     this.shipMarkers.set(shipData.mmsi, marker);
                     this.aisLayerGroup.addLayer(marker);
+                    console.log('🗺️ Marker added to layer group. Total markers:', this.shipMarkers.size);
                 }
             }
             
@@ -2409,6 +2426,7 @@
             }
             
             processMessage(data) {
+                console.log('🚀 AISMessageProcessor.processMessage called with:', data);
                 try {
                     // Handle both direct AISStream format and backend processed format
                     let message;
@@ -2428,13 +2446,19 @@
                     }
                     
                     // Extract ship data
+                    console.log('🔍 Extracting ship data...');
                     const shipData = this.extractShipData(message);
                     
                     if (shipData && this.validateShipData(shipData) && this.isWithinBounds(shipData)) {
+                        console.log('😢 Adding ship to data manager:', shipData.shipName);
                         this.dataManager.addOrUpdateShip(shipData);
                         console.log(`✅ Added/Updated ship: ${shipData.shipName} (${shipData.mmsi}) at ${shipData.latitude.toFixed(4)}, ${shipData.longitude.toFixed(4)}`);
                     } else {
-                        console.warn('❌ Ship data validation failed:', shipData);
+                        console.warn('❌ Ship data validation failed:', {
+                            shipData: shipData,
+                            validated: this.validateShipData(shipData),
+                            withinBounds: this.isWithinBounds(shipData)
+                        });
                     }
                 } catch (error) {
                     console.error('AIS message processing error:', error);
