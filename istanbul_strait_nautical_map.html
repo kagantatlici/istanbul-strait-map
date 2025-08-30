@@ -1928,6 +1928,7 @@
                 
                 try {
                     this.websocket = new WebSocket(AIS_CONFIG.BACKEND_WS_URL);
+                    console.log('🔄 WebSocket object created');
                     this.setupBackendEventHandlers();
                 } catch (error) {
                     console.error('❌ Backend connection failed:', error);
@@ -1968,7 +1969,10 @@
             }
             
             setupBackendEventHandlers() {
+                console.log('🔧 Setting up backend event handlers');
+                
                 this.websocket.onopen = () => {
+                    console.log('🟢 WebSocket onopen event fired');
                     this.connectionState = 'connected';
                     this.reconnectAttempts = 0;
                     this.updateUI('connected', `AIS Aktif (Backend)`);
@@ -1990,6 +1994,7 @@
                 };
                 
                 this.websocket.onmessage = (event) => {
+                    console.log('🔵 WebSocket onmessage event fired');
                     try {
                         const message = JSON.parse(event.data);
                         console.log('📨 Raw backend message received:', message);
@@ -2002,11 +2007,13 @@
                 };
                 
                 this.websocket.onerror = (error) => {
+                    console.log('🔴 WebSocket onerror event fired');
                     console.error('❌ Backend WebSocket error:', error);
                     this.fallbackToDemo();
                 };
                 
                 this.websocket.onclose = (event) => {
+                    console.log('🟡 WebSocket onclose event fired');
                     console.log(`🔌 Backend connection closed: ${event.code} - ${event.reason}`);
                     console.log('🗑️ Close event details:', {
                         code: event.code,
@@ -2014,6 +2021,15 @@
                         wasClean: event.wasClean
                     });
                     this.connectionState = 'disconnected';
+                    
+                    // Log more details about why connection was closed
+                    if (event.code === 1005) {
+                        console.error('❌ WebSocket connection closed abnormally - possible authentication or path issue');
+                    } else if (event.code === 1006) {
+                        console.error('❌ WebSocket connection failed - network or server issue');
+                    } else if (event.code === 4000) {
+                        console.error('❌ Custom server error - check backend logs');
+                    }
                     
                     if (event.code === 1006 || !this.isEnabled) {
                         console.log('🎭 Connection failed, falling back to demo mode...');
