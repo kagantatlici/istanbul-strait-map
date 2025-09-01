@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional nautical chart of Istanbul Strait (Bosphorus) using NOAA Chart Display Service for clean display">
+    <meta name="keywords" content="Istanbul Strait, Bosphorus, nautical chart, NOAA charts, maritime navigation, clean display">
+    <title>Istanbul Strait Nautical Map - V3</title>
+    
+    <!-- Preload critical resources for faster loading -->
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://basemaps.cartocdn.com">
+    <link rel="preconnect" href="https://gis.charttools.noaa.gov">
+    <link rel="preconnect" href="https://tiles.openseamap.org">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin="" />
+    
+    <style>
+        /* ===== MOBILE-FIRST CSS FOUNDATION ===== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            overflow: hidden;
+            /* Mobile-first responsive setup */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Optimize for mobile touch */
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* ===== MOBILE-ONLY STYLES ===== */
+        
+        #map {
+            height: 100vh;
+            width: 100vw;
+            background-color: #f0f8ff;
+            flex: 1;
+            position: relative;
+            touch-action: manipulation;
+        }
+        
+        .leaflet-container {
+            background-color: #f0f8ff;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Hide Leaflet attribution for cleaner look */
+        .leaflet-control-attribution {
+            display: none;
+        }
+        
+        /* Hide Leaflet zoom controls - rely on pinch-to-zoom only */
+        .leaflet-control-zoom {
+            display: none !important;
+        }
+        
+        /* Header Time Slider - Replaces map title to eliminate overlap */
+        .header-time-slider {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 60px; /* Leave space for hamburger menu */
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 50, 100, 0.9));
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            font-family: 'Courier New', monospace;
+            max-width: calc(100vw - 80px);
+            display: none; /* Hidden by default, shown when ship simulation is active */
+        }
+        
+        .header-time-slider.active {
+            display: block;
+        }
+        
+        .header-time-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+        
+        .header-time-slider input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: 4px;
+        }
+        
+        .header-time-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #2196F3;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header-time-slider input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #2196F3;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header-time-info {
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        
+        /* Ship Toggle Button */
+        .ship-toggle {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.95), rgba(21, 101, 192, 0.95));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .ship-toggle:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+        
+        .ship-toggle.active {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.95), rgba(56, 142, 60, 0.95));
+            border-color: rgba(139, 195, 74, 0.5);
+            animation: pulse-green 2s infinite;
+        }
+        
+        @keyframes pulse-green {
+            0% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+            50% { box-shadow: 0 4px 20px rgba(76, 175, 80, 0.6); }
+            100% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+        }
+        
+        /* V3 Enhanced Hamburger Menu Styles */
+        .mobile-hamburger-menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+        }
+        
+        .hamburger-button {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 50, 100, 0.9));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 50px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .hamburger-button:active {
+            transform: scale(0.95);
+            background: linear-gradient(135deg, rgba(0, 30, 60, 0.95), rgba(0, 20, 40, 0.95));
+        }
+        
+        /* V3 Compact Dropdown with Ship Controls */
+        .hamburger-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(0, 30, 60, 0.95));
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            min-width: 280px;
+            max-width: 320px;
+            max-height: 70vh;
+            overflow-y: auto;
+            transform: translateY(-10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1002;
+        }
+        
+        .hamburger-dropdown.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .hamburger-dropdown::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* V3 Ship Controls in Dropdown */
+        .ship-controls-section {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .ship-controls-header {
+            text-align: center;
+            color: #FFD700;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .ship-control-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .ship-control-group.own-ship {
+            background: rgba(33, 150, 243, 0.1);
+            border-color: rgba(33, 150, 243, 0.3);
+        }
+        
+        .ship-control-group.other-ship {
+            background: rgba(255, 152, 0, 0.1);
+            border-color: rgba(255, 152, 0, 0.3);
+        }
+        
+        .ship-control-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .ship-control-title.own-ship {
+            color: #2196F3;
+        }
+        
+        .ship-control-title.other-ship {
+            color: #FF9800;
+        }
+        
+        .direction-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .direction-btn {
+            flex: 1;
+            padding: 8px 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .direction-btn.selected {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .speed-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 45px;
+        }
+        
+        .speed-input {
+            flex: 1;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+        
+        .speed-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Other Controls Section */
+        .other-controls-section {
+            padding: 15px;
+        }
+        
+        .hamburger-item {
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .hamburger-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .hamburger-item-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .hamburger-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mobile-toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        
+        .mobile-toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .mobile-toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: .4s;
+            border-radius: 20px;
+        }
+        
+        .mobile-toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .mobile-toggle-slider {
+            background-color: #2196F3;
+        }
+        
+        input:checked + .mobile-toggle-slider:before {
+            transform: translateX(20px);
+        }
+        
+        .hamburger-slider-container {
+            margin-top: 8px;
+        }
+        
+        .hamburger-slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .hamburger-slider {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .hamburger-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #2196F3;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .hamburger-value-display {
+            text-align: center;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 4px;
+        }
+        
+        /* Vertical Time Slider - Transparent Right Side */
+        .vertical-time-slider {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            background: transparent; /* Fully transparent background */
+            padding: 10px 5px;
+            border-radius: 10px;
+            height: 300px;
+            width: 50px; /* slightly wider for easier handling */
+            display: none;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .vertical-time-slider.active {
+            display: block;
+        }
+        
+        .vertical-time-labels {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+            margin-bottom: 8px;
+        }
+        
+        .vertical-time-labels span {
+            margin-bottom: 15px;
+            writing-mode: horizontal-tb;
+        }
+        
+        .vertical-slider-container {
+            height: 240px; /* taller for more travel */
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        
+        .vertical-slider-container input[type="range"] {
+            width: 240px; /* match container height due to rotation */
+            height: 8px; /* thicker track for visibility */
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+            transform: rotate(-90deg);
+            transform-origin: center center;
+        }
+        
+        .vertical-slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px; /* larger thumb */
+            height: 22px; /* larger thumb */
+            background: #2196F3;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+        
+        .vertical-slider-container input[type="range"]::-moz-range-thumb {
+            width: 22px; /* larger thumb */
+            height: 22px; /* larger thumb */
+            background: #2196F3;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+        
+        .vertical-time-info {
+            text-align: center;
+            font-size: 9px;
+            font-weight: bold;
+            color: #00E676; /* brighter green for readability */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+        
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .hamburger-dropdown {
+                min-width: 320px;
+            }
+            
+            .ship-control-group {
+                padding: 15px;
+            }
+            
+            .ship-control-title {
+                font-size: 13px;
+            }
+            
+            .speed-input {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+            
+            .direction-btn {
+                padding: 10px 6px;
+                font-size: 11px;
+            }
+        }
+    /* ===== Custom Ship Marker Styles ===== */
+        .ship-marker-custom {
+            background: transparent !important;
+            border: none !important;
+        }
+        .ship-marker {
+            width: 30px; /* Scaled down from 44px */
+            height: 30px; /* Scaled down from 44px */
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            transform-origin: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+        .ship-marker.own-ship {
+            border: 2px solid #2196F3;
+        }
+        .ship-marker.other-ship {
+            border: 2px solid #FF9800;
+        }
+        .ship-marker::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent; /* Scaled down */
+            border-right: 6px solid transparent; /* Scaled down */
+            transform: translate(-50%, -70%); /* Adjusted for new size */
+        }
+        .ship-marker.own-ship::before {
+            border-bottom: 12px solid #2196F3; /* Scaled down */
+        }
+        .ship-marker.other-ship::before {
+            border-bottom: 12px solid #FF9800; /* Scaled down */
+        }
+
+        /* Advisory banners */
+        .advisory-banners {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: calc(100vw - 80px);
+        }
+        .banner {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            text-align: center;
+            backdrop-filter: blur(2px);
+        }
+        .banner-status.success { background: rgba(56, 142, 60, 0.95); }
+        .banner-status.error { background: rgba(198, 40, 40, 0.95); }
+        .banner-minspeed.info { background: rgba(25, 118, 210, 0.95); }
+
+        /* Waypoint label for route overlay (compact) */
+        .route-waypoint {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            pointer-events: none;
+        }
+        .route-wp-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.35);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.45);
+            opacity: 0.85;
+        }
+        .route-wp-num {
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.75);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+
+        /* ===== Custom Meeting Point Marker Style ===== */
+        .custom-meeting-marker {
+            width: 20px; /* Scaled down from 24px */
+            height: 20px; /* Scaled down from 24px */
+            background: radial-gradient(circle, #ff0000, #cc0000);
+            border: 2px solid #ffffff; /* Scaled down */
+            border-radius: 50%;
+            position: relative;
+            animation: meetingPulse 2s infinite;
+            box-shadow: 0 2px 8px rgba(255, 0, 0, 0.5);
+        }
+        .custom-meeting-marker::before {
+            content: 'X'; /* Using X instead of warning sign for clarity */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px; /* Scaled down */
+            font-weight: bold;
+        }
+        @keyframes meetingPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 2px 12px rgba(255, 0, 0, 0.8); }
+            100% { transform: scale(1); }
+        }
+
+        /* ===== Meeting Point Marker Styles (from working version) ===== */
+        .meeting-point-marker {
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, #ff0000, #cc0000);
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            position: relative;
+            animation: meetingPulse 2s infinite;
+            box-shadow: 0 2px 8px rgba(255, 0, 0, 0.5);
+        }
+        .meeting-point-marker::before {
+            content: '⚠';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .single-meeting-marker {
+            width: 20px;
+            height: 20px;
+            background: #FF5252;
+            border: 4px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(255, 82, 82, 0.6);
+            z-index: 999;
+            position: relative;
+            animation: meetingPulse 2s infinite;
+        }
+        .single-meeting-marker::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border: 2px solid rgba(255, 82, 82, 0.3);
+            border-radius: 50%;
+            animation: meetingRipple 2s infinite;
+        }
+        @keyframes meetingRipple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        
+    </style>
+</head>
+
+    <body>
+    <!-- Advisory Banners (top-center) -->
+    <div id="advisoryBanners" class="advisory-banners" style="display:none;">
+        <div id="bannerStatus" class="banner banner-status"></div>
+        <div id="bannerMinSpeed" class="banner banner-minspeed"></div>
+    </div>
+    <!-- V3 Hamburger Menu with Ship Data -->
+    <div class="mobile-hamburger-menu">
+        <div class="hamburger-button" onclick="toggleHamburgerMenu()">
+            ☰
+        </div>
+        <div class="hamburger-dropdown" id="hamburgerDropdown">
+            <!-- Ship Data Section -->
+            <div class="ship-controls-section">
+                <div class="ship-controls-header">⚓ Ship Data</div>
+                
+                <!-- Own Ship Controls -->
+                <div class="ship-control-group own-ship">
+                    <div class="ship-control-title own-ship">🚢 Own Ship (Blue)</div>
+                    <div class="direction-controls">
+                        <div class="direction-btn selected" id="ownNorthbound" onclick="selectShipDirection('own', 'northbound')">
+                            ⬆️ North
+                        </div>
+                        <div class="direction-btn" id="ownSouthbound" onclick="selectShipDirection('own', 'southbound')">
+                            ⬇️ South
+                        </div>
+                    </div>
+                    <div class="speed-control">
+                        <label class="speed-label">Speed:</label>
+                        <input type="number" class="speed-input" id="ownShipSpeed" min="1" max="15" value="11" step="0.5">
+                        <span style="font-size: 10px; color: rgba(255,255,255,0.6);">kts</span>
+                    </div>
+                    <div class="speed-control" style="margin-top:8px;">
+                        <label class="speed-label">Route:</label>
+                        <select class="speed-input" id="ownRouteSelect" style="text-align:left;">
+                            <option value="orta">Orta Kanal</option>
+                            <option value="sancak">Sancak Hat</option>
+                            <option value="iskele">İskele Hat</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Other Ship Controls -->
+                <div class="ship-control-group other-ship">
+                    <div class="ship-control-title other-ship">🚢 Other Ship (Orange)</div>
+                    <div class="direction-controls">
+                        <div class="direction-btn selected" id="otherNorthbound" onclick="selectShipDirection('other', 'northbound')">
+                            ⬆️ North
+                        </div>
+                        <div class="direction-btn" id="otherSouthbound" onclick="selectShipDirection('other', 'southbound')">
+                            ⬇️ South
+                        </div>
+                    </div>
+                    <div class="speed-control">
+                        <label class="speed-label">Speed:</label>
+                        <input type="number" class="speed-input" id="otherShipSpeed" min="1" max="15" value="7.5" step="0.5">
+                        <span style="font-size: 10px; color: rgba(255,255,255,0.6);">kts</span>
+                    </div>
+                    <div class="speed-control" style="margin-top:8px;">
+                        <label class="speed-label">Route:</label>
+                        <select class="speed-input" id="otherRouteSelect" style="text-align:left;">
+                            <option value="orta">Orta Kanal</option>
+                            <option value="sancak">Sancak Hat</option>
+                            <option value="iskele">İskele Hat</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other Controls Section -->
+            <div class="other-controls-section">
+                <div class="hamburger-item">
+                    <div class="hamburger-item-title">🌊 Layer Controls</div>
+                    <div class="hamburger-slider-container">
+                        <div class="hamburger-slider-label">
+                            <span>OpenSeaMap Opacity:</span>
+                        </div>
+                        <input type="range" id="mobileOpacitySlider" class="hamburger-slider" min="0" max="100" value="30">
+                        <div class="hamburger-value-display">
+                            Value: <span id="mobileOpacityValue">30</span>%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hamburger-item">
+                    <div class="hamburger-toggle">
+                        <span class="hamburger-item-title">🌙 Dark Mode:</span>
+                        <label class="mobile-toggle-switch">
+                            <input type="checkbox" id="mobileDarkModeToggle">
+                            <span class="mobile-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="hamburger-item">
+                    <div class="hamburger-toggle">
+                        <span class="hamburger-item-title">🗺️ Show Routes:</span>
+                        <label class="mobile-toggle-switch">
+                            <input type="checkbox" id="mobileRoutesToggle">
+                            <span class="mobile-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="hamburger-item">
+                    <div class="hamburger-toggle">
+                        <span class="hamburger-item-title">📍 Coordinates:</span>
+                        <label class="mobile-toggle-switch">
+                            <input type="checkbox" id="mobileCoordinatesToggle">
+                            <span class="mobile-toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div id="mobileCoordinatesDisplay" style="font-size: 11px; opacity: 0.8; margin-top: 5px; display: none;">
+                        Lat: --.----- Lng: ---.-----
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ship Toggle Button -->
+    <div class="ship-toggle" id="shipToggle" onclick="toggleShipSimulation()" title="Ship Simulation">
+        🚢
+    </div>
+    
+    
+    <!-- Vertical Time Slider (transparent) -->
+    <div class="vertical-time-slider" id="verticalTimeSlider">
+        <!-- removed labels -->
+        <div class="vertical-slider-container">
+            <input type="range" id="verticalTimeControl" min="0" max="60" value="0" step="1">
+        </div>
+        <div class="vertical-time-info" id="verticalTimeInfo">Now</div>
+    </div>
+    
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    
+    <script>
+        // Istanbul Strait coordinates and boundaries
+        const ISTANBUL_STRAIT_CENTER = [41.035, 29.059];
+        const INITIAL_ZOOM = 12;
+        const MIN_ZOOM = 10;
+        const MAX_ZOOM = 15;
+        
+        // Ship simulation variables
+        let shipSimulationActive = false;
+        let shipRoute = null;
+        let routeWaypoints = [];
+        let routeDistances = [];
+        let totalRouteDistance = 0;
+        let currentTime = 0; // minutes from start
+        let animationFrame = null;
+        let currentRouteWaypoints = []; // Active route based on direction
+        let singleMeetingMarker = null; // Single marker for nearest meeting point
+        let dynamicMeetingMarker = null; // Dynamic red meeting point marker
+        let verticalSliderActive = false; // Flag for vertical slider state
+        let kandilliThresholdAlong = null; // cached along-distance for Arnavutköy (İskele wp7)
+
+        // Ship markers and tracking
+        let ownShipMarker = null;
+        let otherShipMarker = null;
+
+        // Route overlay controls
+        let routesVisible = false;
+        const routeOverlays = { lines: {}, waypoints: {} }; // keyed by routeId
+        
+        // Ship class for managing individual ships
+        class Ship {
+            constructor(id, name, color, defaultSpeed, defaultDirection, defaultPosition, routeId) {
+                this.id = id;
+                this.name = name;
+                this.color = color;
+                this.speed = defaultSpeed;
+                this.direction = defaultDirection;
+                this.marker = null;
+                this.customStartPosition = null;
+                this.customStartTime = 0;
+                this.defaultPosition = defaultPosition; // 'north' or 'south'
+                this.routeId = routeId; // 'sancak' | 'orta' | 'iskele'
+            }
+            
+            getStartingWaypoints() {
+                const coords = ROUTES[this.routeId].coords;
+                // Our route arrays are defined South -> North
+                // For northbound return as-is, for southbound return reversed
+                return this.direction === 'northbound' ? [...coords] : [...coords].reverse();
+            }
+            
+            getStartingPosition() {
+                const waypoints = this.getStartingWaypoints();
+                return this.defaultPosition === 'south' ? 
+                    waypoints[0] : waypoints[waypoints.length - 1];
+            }
+        }
+
+        // Pre-defined routes (South -> North)
+        const ROUTES = {
+            sancak: {
+                id: 'sancak', name: 'Sancak Hat', color: '#8A2BE2',
+                coords: [[40.958136,28.987145],[40.990218,28.997789],[41.019092,28.997982],[41.024038,29.000982],[41.051108,29.046349],[41.069258,29.052381],[41.07438,29.053932],[41.081901,29.062855],[41.099546,29.062341],[41.10505,29.065014],[41.119176,29.086437],[41.122173,29.085274],[41.147458,29.061482],[41.156426,29.061102],[41.179615,29.085255],[41.19303,29.105648],[41.195663,29.109615],[41.201627,29.115277],[41.211146,29.124278]]
+            },
+            orta: {
+                id: 'orta', name: 'Orta Kanal', color: '#FF8C00',
+                coords: [[40.958136,28.987145],[40.990218,28.997789],[41.019092,28.997982],[41.026035,28.999968],[41.050299,29.042151],[41.074474,29.052459],[41.082238,29.060447],[41.099104,29.060643],[41.10535,29.063236],[41.119642,29.080426],[41.124487,29.080577],[41.147697,29.058349],[41.15553,29.058267],[41.180336,29.084119],[41.194786,29.103576],[41.202343,29.113727],[41.212305,29.12166]]
+            },
+            iskele: {
+                id: 'iskele', name: 'İskele Hat', color: '#A52A2A',
+                coords: [[40.958136,28.987145],[40.990218,28.997789],[41.019092,28.997982],[41.026035,28.999968],[41.034311,29.007195],[41.049261,29.035879],[41.068108,29.048229],[41.075023,29.052377],[41.082069,29.059913],[41.100637,29.059958],[41.10576,29.061669],[41.124113,29.078085],[41.13039,29.076103],[41.147285,29.061029],[41.1568,29.061663],[41.179465,29.084575],[41.19251,29.104896],[41.195719,29.109395],[41.201617,29.115191],[41.211228,29.124315]]
+            }
+        };
+
+        // Initialize two ships - both starting northbound from south
+        // Defaults: own on İskele, other on Sancak
+        const ships = [
+            new Ship('own', 'OWN SHIP', '#2196F3', 11, 'northbound', 'south', 'iskele'),
+            new Ship('other', 'OTHER SHIP', '#FF9800', 7.5, 'northbound', 'south', 'sancak')
+        ];
+        
+        // Quick access to ships
+        const ownShip = ships[0];
+        const otherShip = ships[1];
+        
+        // Map layers
+        let openSeaMapLayer = null;
+        let coordinatesEnabled = false;
+        let darkModeEnabled = false;
+        
+        // Define map boundaries to focus on the Istanbul Strait
+        const bounds = L.latLngBounds(L.latLng(40.95, 28.9), L.latLng(41.28, 29.22));
+
+        // Initialize the map
+        let map = L.map('map', {
+            center: ISTANBUL_STRAIT_CENTER,
+            zoom: INITIAL_ZOOM,
+            minZoom: MIN_ZOOM,
+            maxZoom: MAX_ZOOM,
+            zoomControl: false,
+            attributionControl: false,
+            maxBounds: bounds,
+            maxBoundsViscosity: 1.0 // Makes the bounds hard, preventing dragging outside
+        });
+        
+        // (Replaced single fixed route with 3 predefined routes below)
+
+        // Calculate distances between waypoints
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 3440.065; // Nautical miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        // (Per-ship distances are computed on-the-fly; no global route distances needed)
+        
+        // Base map layer
+        const baseLayer = L.tileLayer('https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors, © CartoDB',
+            maxZoom: MAX_ZOOM
+        });
+        
+        baseLayer.addTo(map);
+
+        // Istanbul Strait Traffic Separation Scheme (manual overlay)
+        let tssLayerGroup = L.layerGroup();
+
+        const istanbulStraitTSS = {
+            centerLine: [
+                [41.225717, 29.132567],
+                [41.202050, 29.113400],
+                [41.180383, 29.084233],
+                [41.155383, 29.058383],
+                [41.147733, 29.058383],
+                [41.122050, 29.082900],
+                [41.119217, 29.082900],
+                [41.105383, 29.063067],
+                [41.099050, 29.060733],
+                [41.082050, 29.060400],
+                [41.074550, 29.052400],
+                [41.050717, 29.042883],
+                [41.024883, 28.998067],
+                [41.022383, 28.996233],
+                [41.001550, 28.995400]
+            ],
+            easternBoundary: [
+                [40.999050, 29.000567],
+                [41.017383, 29.000733],
+                [41.024050, 29.002917],
+                [41.050717, 29.048900],
+                [41.074050, 29.055067],
+                [41.081883, 29.064883],
+                [41.099883, 29.063717],
+                [41.104900, 29.066217],
+                [41.119050, 29.089550],
+                [41.122383, 29.088733],
+                [41.146550, 29.064400],
+                [41.157050, 29.063550],
+                [41.179050, 29.086233],
+                [41.193550, 29.112567],
+                [41.204050, 29.119567],
+                [41.221717, 29.142067]
+            ],
+            westernBoundary: [
+                [41.228950, 29.124567],
+                [41.204050, 29.110067],
+                [41.199050, 29.099567],
+                [41.174217, 29.074567],
+                [41.157717, 29.054383],
+                [41.149550, 29.054067],
+                [41.123733, 29.076550],
+                [41.103217, 29.057900],
+                [41.084550, 29.058383],
+                [41.081050, 29.056233],
+                [41.075217, 29.048567],
+                [41.067883, 29.047067],
+                [41.048550, 29.034083],
+                [41.027883, 28.995067],
+                [41.020550, 28.990400],
+                [41.004050, 28.989900]
+            ]
+        };
+
+        function createManualTSS() {
+            const centerLineStyle = {
+                color: '#eb66c8',
+                weight: 8,
+                opacity: 0.9,
+                dashArray: null
+            };
+            const easternBoundaryStyle = {
+                color: '#eb66c8',
+                weight: 3,
+                opacity: 0.9,
+                dashArray: '10, 5'
+            };
+            const westernBoundaryStyle = {
+                color: '#eb66c8',
+                weight: 3,
+                opacity: 0.9,
+                dashArray: '10, 5'
+            };
+
+            tssLayerGroup.clearLayers();
+
+            const centerLine = L.polyline(istanbulStraitTSS.centerLine, centerLineStyle).bindPopup(`
+                <div style="font-family: 'Courier New', monospace; font-size: 12px;">
+                    <strong>TSS CENTER LINE</strong><br>
+                    <em>Traffic Separation Center</em><br>
+                    <hr style="margin: 5px 0;">
+                    📏 <strong>Points:</strong> 15 official coordinates
+                </div>
+            `);
+            const easternBoundaryLine = L.polyline(istanbulStraitTSS.easternBoundary, easternBoundaryStyle).bindPopup(`
+                <div style="font-family: 'Courier New', monospace; font-size: 12px;">
+                    <strong>EASTERN BOUNDARY</strong><br>
+                    <em>Traffic Lane Eastern Limit</em><br>
+                    <hr style="margin: 5px 0;">
+                    📏 <strong>Points:</strong> 16 official coordinates
+                </div>
+            `);
+            const westernBoundaryLine = L.polyline(istanbulStraitTSS.westernBoundary, westernBoundaryStyle).bindPopup(`
+                <div style="font-family: 'Courier New', monospace; font-size: 12px;">
+                    <strong>WESTERN BOUNDARY</strong><br>
+                    <em>Traffic Lane Western Limit</em><br>
+                    <hr style="margin: 5px 0;">
+                    📏 <strong>Points:</strong> 16 official coordinates
+                </div>
+            `);
+
+            tssLayerGroup.addLayer(centerLine);
+            tssLayerGroup.addLayer(easternBoundaryLine);
+            tssLayerGroup.addLayer(westernBoundaryLine);
+            tssLayerGroup.addTo(map);
+        }
+
+        createManualTSS();
+        
+        // Initialize OpenSeaMap layer
+        function initializeOpenSeaMap() {
+            openSeaMapLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+                attribution: '© OpenSeaMap contributors',
+                opacity: 0.3,
+                maxZoom: MAX_ZOOM
+            });
+            openSeaMapLayer.addTo(map);
+        }
+        
+        // Initialize map
+        initializeOpenSeaMap();
+        
+        // Apply default start positions for both ships based on their current directions
+        function applyDefaultStartPositions() {
+            const ref = ROUTES.orta.coords;
+            // Northbound defaults: own->wp2, other->wp3
+            // Southbound defaults: own->wp16, other->wp14
+            const northDefaults = {
+                own: ref[1],   // wp2
+                other: ref[2]  // wp3
+            };
+            const southDefaults = {
+                own: ref[15],  // wp16 (0-based)
+                other: ref[13] // wp14
+            };
+
+            // Own ship
+            const ownDefault = ownShip.direction === 'northbound' ? northDefaults.own : southDefaults.own;
+            ownShip.customStartPosition = L.latLng(ownDefault[0], ownDefault[1]);
+            ownShip.customStartTime = 0;
+
+            // Other ship
+            const otherDefault = otherShip.direction === 'northbound' ? northDefaults.other : southDefaults.other;
+            otherShip.customStartPosition = L.latLng(otherDefault[0], otherDefault[1]);
+            otherShip.customStartTime = 0;
+        }
+
+        // Ship direction selection
+        function selectShipDirection(shipName, direction) {
+            const ship = shipName === 'own' ? ownShip : otherShip;
+            ship.direction = direction;
+            
+            // Update UI
+            document.getElementById(shipName + 'Northbound').classList.remove('selected');
+            document.getElementById(shipName + 'Southbound').classList.remove('selected');
+            document.getElementById(shipName + direction.charAt(0).toUpperCase() + direction.slice(1)).classList.add('selected');
+            
+            // Reposition both ships to their direction-based defaults
+            applyDefaultStartPositions();
+            
+            // If simulation is active, restart it
+            if (shipSimulationActive) {
+                startShipSimulation();
+            }
+            updateAdvisoryBanners();
+        }
+        
+        // Project point onto line segment
+        function projectPointOnSegment(point, segmentStart, segmentEnd) {
+            const dx = segmentEnd[1] - segmentStart[1];
+            const dy = segmentEnd[0] - segmentStart[0];
+            const length = Math.sqrt(dx * dx + dy * dy);
+            
+            if (length === 0) return segmentStart;
+            
+            const t = Math.max(0, Math.min(1, 
+                ((point.lng - segmentStart[1]) * dx + (point.lat - segmentStart[0]) * dy) / (length * length)
+            ));
+            
+            return [
+                segmentStart[0] + t * dy,
+                segmentStart[1] + t * dx
+            ];
+        }
+        
+        // Find distance along route for a given position
+        function findDistanceAlongRoute(position, waypoints, distances) {
+            let minDistance = Infinity;
+            let bestSegmentIndex = 0;
+            let bestProgress = 0;
+            
+            // Check each route segment to find closest point
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const segmentStart = waypoints[i];
+                const segmentEnd = waypoints[i + 1];
+                const projectedPoint = projectPointOnSegment(position, segmentStart, segmentEnd);
+                
+                const distance = calculateDistance(
+                    position.lat, position.lng,
+                    projectedPoint[0], projectedPoint[1]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    bestSegmentIndex = i;
+                    
+                    // Calculate progress along this segment
+                    const segmentLength = calculateDistance(
+                        segmentStart[0], segmentStart[1],
+                        segmentEnd[0], segmentEnd[1]
+                    );
+                    
+                    const progressLength = calculateDistance(
+                        segmentStart[0], segmentStart[1],
+                        projectedPoint[0], projectedPoint[1]
+                    );
+                    
+                    bestProgress = segmentLength > 0 ? progressLength / segmentLength : 0;
+                }
+            }
+            
+            // Calculate total distance to this point along route
+            let totalDistance = 0;
+            for (let i = 0; i < bestSegmentIndex; i++) {
+                totalDistance += distances[i];
+            }
+            totalDistance += distances[bestSegmentIndex] * bestProgress;
+            
+            return totalDistance;
+        }
+
+        // Calculate bearing between two points
+        function calculateBearing(lat1, lng1, lat2, lng2) {
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const lat1Rad = lat1 * Math.PI / 180;
+            const lat2Rad = lat2 * Math.PI / 180;
+            
+            const y = Math.sin(dLng) * Math.cos(lat2Rad);
+            const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
+            
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            return (bearing + 360) % 360;
+        }
+
+        // ===== Simple Current Advantage Model (SOG-based) =====
+        // We apply fixed, invisible advantages for northbound ships on the İskele route.
+        // - All input speeds are SOG (already current-adjusted). Advantages represent reduced adverse current.
+        // - Only northbound (south -> north) gets advantages; southbound behaves like the old system (no advantage).
+        // - İskele advantages (segment indices are zero-based: segment i is wp(i+1) -> wp(i+2)):
+        //     wp5–wp6:  +1.8 kts  => segment index 4
+        //     wp6–wp7:  +1.0 kts  => segment index 5
+        //     wp11–wp12:+1.5 kts  => segment index 11
+        // - Other routes (sancak, orta) have no segment advantage.
+        // - No additional head start is applied; defaults place own at wp2 and other at wp3.
+
+        function getSegmentEffectiveSpeedKts(ship, segmentIndex) {
+            let speed = ship.speed; // SOG base input
+            if (ship.routeId === 'iskele' && ship.direction === 'northbound') {
+                if (segmentIndex === 4) speed += 1.8;      // wp5->wp6
+                else if (segmentIndex === 5) speed += 1.0; // wp6->wp7
+                else if (segmentIndex === 11) speed += 1.5; // wp11->wp12
+            }
+            // Prevent zero/negative effective speeds
+            return Math.max(speed, 0.1);
+        }
+
+        function getSegmentDistances(waypoints) {
+            const dists = [];
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const dist = calculateDistance(
+                    waypoints[i][0], waypoints[i][1],
+                    waypoints[i + 1][0], waypoints[i + 1][1]
+                );
+                dists.push(dist);
+            }
+            return dists;
+        }
+
+        function getTotalDistance(distances) {
+            return distances.reduce((a, b) => a + b, 0);
+        }
+
+        // Default marker start offset along route:
+        // own ship at wp2, other ship at wp3 (to ease dragging on mobile)
+        function getDefaultStartDistanceAlongRoute(ship, distances) {
+            const targetWpIndexOneBased = ship.id === 'own' ? 2 : 3;
+            // Sum segments up to wpN (exclusive): e.g., wp2 => sum of segment[0]
+            let sum = 0;
+            for (let i = 0; i < Math.max(0, targetWpIndexOneBased - 1); i++) {
+                if (i < distances.length) sum += distances[i];
+            }
+            return sum;
+        }
+
+        // Advance along route accounting for per-segment effective speed (kts)
+        function advanceAlongRouteByTime(ship, startDistance, timeMinutes, waypoints, distances) {
+            const total = getTotalDistance(distances);
+            if (total <= 0 || waypoints.length < 2) {
+                return {
+                    position: waypoints[0],
+                    bearing: 0,
+                    segmentIndex: 0,
+                    nextWaypoint: 1,
+                    distanceToNext: distances[0] || 0,
+                    eta: 0
+                };
+            }
+
+            let start = Math.max(0, Math.min(total, startDistance));
+            let remainingTime = Math.max(0, timeMinutes);
+
+            // Find starting segment and offset
+            let acc = 0;
+            let segIndex = 0;
+            while (segIndex < distances.length && acc + distances[segIndex] <= start) {
+                acc += distances[segIndex];
+                segIndex++;
+            }
+
+            if (segIndex >= distances.length) {
+                const last = waypoints.length - 1;
+                const brg = calculateBearing(
+                    waypoints[last - 1][0], waypoints[last - 1][1],
+                    waypoints[last][0], waypoints[last][1]
+                );
+                return { position: waypoints[last], bearing: brg, segmentIndex: last - 1, nextWaypoint: null, distanceToNext: 0, eta: 0 };
+            }
+
+            let offsetInSeg = start - acc; // nm
+
+            // If no time to advance, return position at current offset within segment
+            if (remainingTime <= 0) {
+                const segLen = distances[segIndex];
+                const progress = segLen > 0 ? Math.max(0, Math.min(1, offsetInSeg / segLen)) : 0;
+                const lat1 = waypoints[segIndex][0], lng1 = waypoints[segIndex][1];
+                const lat2 = waypoints[segIndex + 1][0], lng2 = waypoints[segIndex + 1][1];
+                const lat = lat1 + (lat2 - lat1) * progress;
+                const lng = lng1 + (lng2 - lng1) * progress;
+                const brg = calculateBearing(lat1, lng1, lat2, lng2);
+                const distToNext = Math.max(0, segLen - offsetInSeg);
+                const effNmPerMin = getSegmentEffectiveSpeedKts(ship, segIndex) / 60.0;
+                const eta = effNmPerMin > 0 ? (distToNext / effNmPerMin) : 0;
+                return {
+                    position: [lat, lng],
+                    bearing: brg,
+                    segmentIndex: segIndex,
+                    nextWaypoint: segIndex + 1 < waypoints.length ? segIndex + 1 : null,
+                    distanceToNext: distToNext,
+                    eta: eta
+                };
+            }
+
+            while (remainingTime > 0 && segIndex < distances.length) {
+                const segLen = distances[segIndex];
+                const effKts = getSegmentEffectiveSpeedKts(ship, segIndex);
+                const effNmPerMin = effKts / 60.0;
+                const remainingSegDist = Math.max(0, segLen - offsetInSeg);
+                const timeToFinishSeg = effNmPerMin > 0 ? (remainingSegDist / effNmPerMin) : Infinity;
+
+                if (remainingTime < timeToFinishSeg) {
+                    // We stay within this segment
+                    const moved = remainingTime * effNmPerMin; // nm
+                    const progress = Math.max(0, Math.min(1, (offsetInSeg + moved) / segLen));
+                    const lat1 = waypoints[segIndex][0], lng1 = waypoints[segIndex][1];
+                    const lat2 = waypoints[segIndex + 1][0], lng2 = waypoints[segIndex + 1][1];
+                    const lat = lat1 + (lat2 - lat1) * progress;
+                    const lng = lng1 + (lng2 - lng1) * progress;
+                    const brg = calculateBearing(lat1, lng1, lat2, lng2);
+                    const distToNext = Math.max(0, segLen - (offsetInSeg + moved));
+                    const eta = effNmPerMin > 0 ? (distToNext / effNmPerMin) : 0;
+                    return {
+                        position: [lat, lng],
+                        bearing: brg,
+                        segmentIndex: segIndex,
+                        nextWaypoint: segIndex + 1 < waypoints.length ? segIndex + 1 : null,
+                        distanceToNext: distToNext,
+                        eta: eta
+                    };
+                }
+
+                // Move to next segment
+                remainingTime -= timeToFinishSeg;
+                acc += segLen;
+                segIndex++;
+                offsetInSeg = 0;
+            }
+
+            // If we finished all segments or time ran exactly to end
+            const lastIndex = waypoints.length - 1;
+            const lastBearing = calculateBearing(
+                waypoints[lastIndex - 1][0], waypoints[lastIndex - 1][1],
+                waypoints[lastIndex][0], waypoints[lastIndex][1]
+            );
+            return {
+                position: waypoints[lastIndex],
+                bearing: lastBearing,
+                segmentIndex: lastIndex - 1,
+                nextWaypoint: null,
+                distanceToNext: 0,
+                eta: 0
+            };
+        }
+
+        // SOG-based ship position with simple İskele advantages and per-segment speeds
+        function getShipPositionAtTime(ship, timeMinutes) {
+            // Ship route
+            const shipWaypoints = ship.getStartingWaypoints();
+            const shipDistances = getSegmentDistances(shipWaypoints);
+
+            // Determine start offset along route
+            let startDistance = getDefaultStartDistanceAlongRoute(ship, shipDistances);
+
+            // If custom start is set (from dragging), use that exact offset and reset start time reference
+            if (ship.customStartPosition) {
+                const customOffset = findDistanceAlongRoute(ship.customStartPosition, shipWaypoints, shipDistances);
+                const elapsed = Math.max(0, timeMinutes - ship.customStartTime);
+                return advanceAlongRouteByTime(ship, customOffset, elapsed, shipWaypoints, shipDistances);
+            }
+
+            // Normal advance from default offset
+            return advanceAlongRouteByTime(ship, startDistance, timeMinutes, shipWaypoints, shipDistances);
+        }
+        
+
+        // ===== Overtaking helpers based on Orta Kanal reference =====
+        function getReferenceRouteAndDistances() {
+            const refCoords = ROUTES.orta.coords;
+            const refDistances = getSegmentDistances(refCoords);
+            return { refCoords, refDistances };
+        }
+
+        function progressAlongReference(lat, lng) {
+            const { refCoords, refDistances } = getReferenceRouteAndDistances();
+            return findDistanceAlongRoute({ lat, lng }, refCoords, refDistances);
+        }
+
+        function getPointAlongRouteByDistance(waypoints, distances, distanceAlong) {
+            let acc = 0;
+            for (let i = 0; i < distances.length; i++) {
+                const seg = distances[i];
+                if (distanceAlong <= acc + seg) {
+                    const frac = seg > 0 ? Math.max(0, Math.min(1, (distanceAlong - acc) / seg)) : 0;
+                    const lat1 = waypoints[i][0], lng1 = waypoints[i][1];
+                    const lat2 = waypoints[i + 1][0], lng2 = waypoints[i + 1][1];
+                    const lat = lat1 + (lat2 - lat1) * frac;
+                    const lng = lng1 + (lng2 - lng1) * frac;
+                    return [lat, lng];
+                }
+                acc += seg;
+            }
+            return waypoints[waypoints.length - 1];
+        }
+
+        function calculateOvertakingEvent() {
+            // Only meaningful when both ships move in the same direction
+            const bothNorth = ownShip.direction === 'northbound' && otherShip.direction === 'northbound';
+            const bothSouth = ownShip.direction === 'southbound' && otherShip.direction === 'southbound';
+            if (!bothNorth && !bothSouth) return null;
+
+            const maxTime = 120; // minutes
+            const dt = 0.25; // minutes
+
+            function alongDiff(t) {
+                const o = getShipPositionAtTime(ownShip, t);
+                const p = getShipPositionAtTime(otherShip, t);
+                const a = progressAlongReference(o.position[0], o.position[1]);
+                const b = progressAlongReference(p.position[0], p.position[1]);
+                // For northbound, catch-up when a - b >= 0
+                // For southbound, catch-up when b - a >= 0 (own becomes more south or equal)
+                return bothNorth ? (a - b) : (b - a);
+            }
+
+            let f0 = alongDiff(0);
+            if (f0 >= 0) {
+                const o = getShipPositionAtTime(ownShip, 0);
+                const a = progressAlongReference(o.position[0], o.position[1]);
+                const { refCoords, refDistances } = getReferenceRouteAndDistances();
+                const point = getPointAlongRouteByDistance(refCoords, refDistances, a);
+                return { time: 0, point };
+            }
+
+            let left = 0, right = null;
+            let prevT = 0, prevF = f0;
+            for (let t = dt; t <= maxTime; t += dt) {
+                const ft = alongDiff(t);
+                if (prevF <= 0 && ft >= 0) { right = t; left = prevT; break; }
+                prevT = t; prevF = ft;
+            }
+            if (right === null) return null; // no overtake in window
+
+            for (let i = 0; i < 14; i++) {
+                const mid = (left + right) / 2;
+                if (alongDiff(mid) < 0) left = mid; else right = mid;
+            }
+            const tStar = right;
+            const o = getShipPositionAtTime(ownShip, tStar);
+            const a = progressAlongReference(o.position[0], o.position[1]);
+            const { refCoords, refDistances } = getReferenceRouteAndDistances();
+            const point = getPointAlongRouteByDistance(refCoords, refDistances, a);
+            return { time: tStar, point, along: a };
+        }
+
+        // Create or update overtaking point marker (red dot)
+        function updateDynamicMeetingPoint() {
+            if (dynamicMeetingMarker) {
+                map.removeLayer(dynamicMeetingMarker);
+                dynamicMeetingMarker = null;
+            }
+            const evt = calculateOvertakingEvent();
+            if (!evt) return;
+            const dynamicMeetingIcon = L.divIcon({
+                className: 'meeting-point-marker-container',
+                html: '<div class="meeting-point-marker"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            dynamicMeetingMarker = L.marker(evt.point, { icon: dynamicMeetingIcon, zIndexOffset: 1100 });
+            dynamicMeetingMarker.bindPopup(`
+                <div style="font-family: 'Courier New', monospace; font-size: 12px; text-align: center;">
+                    🔴 <strong>Overtaking Point</strong><br>
+                    <hr style="margin: 5px 0;">
+                    🕰 <strong>Time:</strong> +${evt.time.toFixed(2)} min<br>
+                    📍 <strong>Lat:</strong> ${evt.point[0].toFixed(5)}°<br>
+                    📍 <strong>Lng:</strong> ${evt.point[1].toFixed(5)}°
+                </div>
+            `);
+            dynamicMeetingMarker.addTo(map);
+        }
+
+        // ===== Advisory banners (Northbound only) =====
+        function getKandilliThresholdAlong() {
+            if (kandilliThresholdAlong != null) return kandilliThresholdAlong;
+            // Use İskele wp7 as Arnavutköy vicinity
+            const wp7 = ROUTES.iskele.coords[6];
+            kandilliThresholdAlong = progressAlongReference(wp7[0], wp7[1]);
+            return kandilliThresholdAlong;
+        }
+
+        function overtakesBeforeThresholdWithOwnSpeed(testSpeed) {
+            const original = ownShip.speed;
+            ownShip.speed = testSpeed;
+            const evt = calculateOvertakingEvent();
+            ownShip.speed = original;
+            if (!evt) return false;
+            const thr = getKandilliThresholdAlong();
+            return evt.along <= thr;
+        }
+
+        function updateAdvisoryBanners() {
+            const container = document.getElementById('advisoryBanners');
+            const statusEl = document.getElementById('bannerStatus');
+            const minEl = document.getElementById('bannerMinSpeed');
+
+            // Northbound only
+            const bothNorth = ownShip.direction === 'northbound' && otherShip.direction === 'northbound';
+            if (!bothNorth) { container.style.display = 'none'; return; }
+
+            // If own already ahead at t=0, hide banners
+            const own0 = getShipPositionAtTime(ownShip, 0);
+            const other0 = getShipPositionAtTime(otherShip, 0);
+            const a0 = progressAlongReference(own0.position[0], own0.position[1]);
+            const b0 = progressAlongReference(other0.position[0], other0.position[1]);
+            if (a0 >= b0) { container.style.display = 'none'; return; }
+
+            const thr = getKandilliThresholdAlong();
+            const evt = calculateOvertakingEvent();
+            const canBefore = evt && evt.along <= thr;
+
+            // Status banner (green/red)
+            if (canBefore) {
+                statusEl.className = 'banner banner-status success';
+                statusEl.textContent = 'Bu süratle Kandilli öncesi geçilebilir.';
+            } else {
+                statusEl.className = 'banner banner-status error';
+                statusEl.textContent = 'Bu süratle Kandilli öncesi geçiş mümkün değil.';
+            }
+
+            // Minimum speed banner (blue)
+            let minText = '';
+            // Binary search 0.1..15.0 kts
+            let lo = 0.1, hi = 15.0, found = null;
+            for (let i = 0; i < 22; i++) {
+                const mid = (lo + hi) / 2;
+                if (overtakesBeforeThresholdWithOwnSpeed(mid)) {
+                    found = mid; hi = mid;
+                } else {
+                    lo = mid;
+                }
+            }
+            if (found == null) {
+                minText = 'Diğer gemiye Arnavutköy Feneri’nde yetişmek için minimum süratiniz >15 kts olmalı.';
+            } else {
+                const roundedUp = Math.ceil(found * 10) / 10;
+                minText = `Diğer gemiye Arnavutköy Feneri’nde yetişmek için minimum süratiniz ${roundedUp.toFixed(1)} kts olmalı.`;
+            }
+            minEl.className = 'banner banner-minspeed info';
+            minEl.textContent = minText;
+
+            container.style.display = 'flex';
+        }
+        
+        
+        
+        
+        // Update ship positions
+        function updateShipPositions() {
+            if (!shipSimulationActive) return;
+            
+            const ownPosData = getShipPositionAtTime(ownShip, currentTime);
+            const otherPosData = getShipPositionAtTime(otherShip, currentTime);
+            const ownPos = ownPosData.position;
+            const otherPos = otherPosData.position;
+            
+            // Update ship markers
+            if (ownShipMarker) {
+                ownShipMarker.setLatLng(ownPos);
+                const el = ownShipMarker.getElement();
+                if (el && el.children && el.children[0]) {
+                    el.children[0].style.transform = `rotate(${ownPosData.bearing}deg)`;
+                }
+            }
+            if (otherShipMarker) {
+                otherShipMarker.setLatLng(otherPos);
+                const el2 = otherShipMarker.getElement();
+                if (el2 && el2.children && el2.children[0]) {
+                    el2.children[0].style.transform = `rotate(${otherPosData.bearing}deg)`;
+                }
+            }
+            
+            // Trails removed
+            
+            // Update time displays
+            const timeDisplay = currentTime === 0 ? 'Now' : `+${currentTime} min`;
+            document.getElementById('verticalTimeInfo').textContent = timeDisplay;
+            
+            
+            
+            // Update overtaking point (reference: Orta Kanal)
+            updateDynamicMeetingPoint();
+        }
+        
+        
+
+        // Native Leaflet drag handlers (mobile-friendly)
+        function attachNativeDrag(ship, marker) {
+            marker.on('dragend', function() {
+                const pos = marker.getLatLng();
+                ship.customStartPosition = pos;
+                ship.customStartTime = currentTime;
+                updateShipPositions();
+                updateDynamicMeetingPoint();
+                updateAdvisoryBanners();
+            });
+        }
+
+        // Start ship simulation
+        function startShipSimulation() {
+            shipSimulationActive = true;
+            currentTime = 0;
+            
+            // Clear existing markers
+            if (ownShipMarker) map.removeLayer(ownShipMarker);
+            if (otherShipMarker) map.removeLayer(otherShipMarker);
+            if (singleMeetingMarker) map.removeLayer(singleMeetingMarker);
+            if (dynamicMeetingMarker) map.removeLayer(dynamicMeetingMarker);
+            
+            singleMeetingMarker = null;
+            dynamicMeetingMarker = null;
+            
+            // Create ship markers
+            const ownPosData = getShipPositionAtTime(ownShip, 0);
+            const otherPosData = getShipPositionAtTime(otherShip, 0);
+            const ownPos = ownPosData.position;
+            const otherPos = otherPosData.position;
+            
+            const ownShipIcon = L.divIcon({
+                className: 'ship-marker-custom',
+                html: `<div class="ship-marker own-ship" style="transform: rotate(${ownPosData.bearing}deg);"></div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+            ownShipMarker = L.marker(ownPos, { icon: ownShipIcon, draggable: true }).addTo(map);
+
+            const otherShipIcon = L.divIcon({
+                className: 'ship-marker-custom',
+                html: `<div class="ship-marker other-ship" style="transform: rotate(${otherPosData.bearing}deg);"></div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+            otherShipMarker = L.marker(otherPos, { icon: otherShipIcon, draggable: true }).addTo(map);
+
+            // Attach native drag handlers (mobile-friendly)
+            attachNativeDrag(ownShip, ownShipMarker);
+            attachNativeDrag(otherShip, otherShipMarker);
+            
+            // Trails are removed.
+            
+            // Show time slider
+            document.getElementById('verticalTimeSlider').classList.add('active');
+            
+            // Update UI
+            document.getElementById('shipToggle').classList.add('active');
+            
+            // Reset slider
+            document.getElementById('verticalTimeControl').value = 0;
+            
+            updateShipPositions();
+            updateDynamicMeetingPoint();
+            updateAdvisoryBanners();
+        }
+        
+        // Stop ship simulation
+        function stopShipSimulation() {
+            shipSimulationActive = false;
+            
+            // Hide time slider
+            document.getElementById('verticalTimeSlider').classList.remove('active');
+            
+            // Clear markers
+            if (ownShipMarker) map.removeLayer(ownShipMarker);
+            if (otherShipMarker) map.removeLayer(otherShipMarker);
+            if (singleMeetingMarker) map.removeLayer(singleMeetingMarker);
+            if (dynamicMeetingMarker) map.removeLayer(dynamicMeetingMarker);
+            
+            ownShipMarker = null;
+            otherShipMarker = null;
+            singleMeetingMarker = null;
+            dynamicMeetingMarker = null;
+            
+            // Reset all ships custom positions
+            ownShip.customStartPosition = null;
+            ownShip.customStartTime = 0;
+            otherShip.customStartPosition = null;
+            otherShip.customStartTime = 0;
+            
+            // Reset time
+            currentTime = 0;
+            document.getElementById('verticalTimeControl').value = 0;
+            
+            // Update UI
+            document.getElementById('shipToggle').classList.remove('active');
+        }
+        
+        // Toggle ship simulation
+        function toggleShipSimulation() {
+            if (shipSimulationActive) {
+                stopShipSimulation();
+            } else {
+                startShipSimulation();
+            }
+        }
+        
+        // Time slider event listener
+        document.getElementById('verticalTimeControl').addEventListener('input', function(e) {
+            if (shipSimulationActive) {
+                currentTime = parseInt(e.target.value);
+                updateShipPositions();
+            }
+        });
+        
+        // Ship speed controls
+        document.getElementById('ownShipSpeed').addEventListener('input', function(e) {
+            ownShip.speed = parseFloat(e.target.value);
+            if (shipSimulationActive) {
+                updateShipPositions();
+            }
+            updateAdvisoryBanners();
+        });
+        
+        document.getElementById('otherShipSpeed').addEventListener('input', function(e) {
+            otherShip.speed = parseFloat(e.target.value);
+            if (shipSimulationActive) {
+                updateShipPositions();
+            }
+            updateAdvisoryBanners();
+        });
+
+        // Route selection controls
+        const ownRouteSelect = document.getElementById('ownRouteSelect');
+        const otherRouteSelect = document.getElementById('otherRouteSelect');
+        // Initialize selects to ship defaults
+        ownRouteSelect.value = ownShip.routeId;
+        otherRouteSelect.value = otherShip.routeId;
+        ownRouteSelect.addEventListener('change', function(e) {
+            ownShip.routeId = e.target.value;
+            if (shipSimulationActive) {
+                startShipSimulation();
+            }
+            updateRoutesOverlay();
+            updateAdvisoryBanners();
+        });
+        otherRouteSelect.addEventListener('change', function(e) {
+            otherShip.routeId = e.target.value;
+            if (shipSimulationActive) {
+                startShipSimulation();
+            }
+            updateRoutesOverlay();
+            updateAdvisoryBanners();
+        });
+        
+        // Hamburger menu functions
+        function toggleHamburgerMenu() {
+            const dropdown = document.getElementById('hamburgerDropdown');
+            const button = document.querySelector('.hamburger-button');
+            
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                button.innerHTML = '☰';
+            } else {
+                dropdown.classList.add('show');
+                button.innerHTML = '×';
+            }
+        }
+        
+        function closeHamburgerMenu() {
+            const dropdown = document.getElementById('hamburgerDropdown');
+            const button = document.querySelector('.hamburger-button');
+            dropdown.classList.remove('show');
+            button.innerHTML = '☰';
+        }
+
+        // Close hamburger menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const hamburgerMenu = document.querySelector('.mobile-hamburger-menu');
+            if (!hamburgerMenu.contains(event.target)) {
+                closeHamburgerMenu();
+            }
+        });
+
+        // Route overlay helpers
+        function clearRoutesOverlay() {
+            // Remove lines
+            Object.keys(routeOverlays.lines).forEach(id => {
+                map.removeLayer(routeOverlays.lines[id]);
+                delete routeOverlays.lines[id];
+            });
+            // Remove waypoints
+            Object.keys(routeOverlays.waypoints).forEach(id => {
+                const arr = routeOverlays.waypoints[id] || [];
+                arr.forEach(m => map.removeLayer(m));
+                delete routeOverlays.waypoints[id];
+            });
+        }
+
+        function addRouteOverlay(routeId) {
+            const route = ROUTES[routeId];
+            if (!route) return;
+
+            // Draw polyline (slim but visible)
+            const line = L.polyline(route.coords, { color: route.color, weight: 3, opacity: 0.85 });
+            line.addTo(map);
+            routeOverlays.lines[routeId] = line;
+
+            // Add waypoints markers (compact numeric labels)
+            const markers = [];
+            route.coords.forEach((coord, idx) => {
+                const num = String(idx + 1);
+                const html = `<div class=\"route-waypoint\"><span class=\"route-wp-dot\" style=\"background:${route.color}\"></span><span class=\"route-wp-num\">${num}</span></div>`;
+                const icon = L.divIcon({
+                    className: 'route-waypoint',
+                    html: html,
+                    iconSize: [18, 12],
+                    iconAnchor: [9, 6]
+                });
+                const m = L.marker(coord, { icon });
+                m.addTo(map);
+                markers.push(m);
+            });
+            routeOverlays.waypoints[routeId] = markers;
+        }
+
+        function updateRoutesOverlay() {
+            if (!routesVisible) {
+                clearRoutesOverlay();
+                return;
+            }
+
+            const selected = new Set([ownShip.routeId, otherShip.routeId]);
+
+            // Remove overlays for routes no longer selected
+            Object.keys(routeOverlays.lines).forEach(id => {
+                if (!selected.has(id)) {
+                    map.removeLayer(routeOverlays.lines[id]);
+                    delete routeOverlays.lines[id];
+                }
+            });
+            Object.keys(routeOverlays.waypoints).forEach(id => {
+                if (!selected.has(id)) {
+                    (routeOverlays.waypoints[id] || []).forEach(m => map.removeLayer(m));
+                    delete routeOverlays.waypoints[id];
+                }
+            });
+
+            // Add overlays for newly selected routes
+            selected.forEach(id => {
+                if (!routeOverlays.lines[id]) {
+                    addRouteOverlay(id);
+                }
+            });
+        }
+
+        // Other controls
+        document.getElementById('mobileOpacitySlider').addEventListener('input', function(e) {
+            const opacity = e.target.value / 100;
+            if (openSeaMapLayer) {
+                openSeaMapLayer.setOpacity(opacity);
+            }
+            document.getElementById('mobileOpacityValue').textContent = e.target.value;
+        });
+        
+        document.getElementById('mobileDarkModeToggle').addEventListener('change', function(e) {
+            darkModeEnabled = e.target.checked;
+            if (darkModeEnabled) {
+                document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+            } else {
+                document.body.style.filter = 'none';
+            }
+        });
+
+        // Routes visibility toggle
+        document.getElementById('mobileRoutesToggle').addEventListener('change', function(e) {
+            routesVisible = e.target.checked;
+            updateRoutesOverlay();
+        });
+
+        document.getElementById('mobileCoordinatesToggle').addEventListener('change', function(e) {
+            coordinatesEnabled = e.target.checked;
+            const display = document.getElementById('mobileCoordinatesDisplay');
+            if (coordinatesEnabled) {
+                display.style.display = 'block';
+            } else {
+                display.style.display = 'none';
+            }
+        });
+        
+        // Update coordinates display
+        map.on('mousemove', function(e) {
+            if (coordinatesEnabled) {
+                const lat = e.latlng.lat.toFixed(5);
+                const lng = e.latlng.lng.toFixed(5);
+                document.getElementById('mobileCoordinatesDisplay').textContent = `Lat: ${lat} Lng: ${lng}`;
+            }
+        });
+        
+        // Initialize
+        console.log('Istanbul Strait Nautical Map V3 initialized');
+        // Initialize routes overlay (hidden by default)
+        updateRoutesOverlay();
+        // Initialize advisory banners
+        updateAdvisoryBanners();
+    </script>
+</body>
+</html>
