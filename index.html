@@ -143,7 +143,7 @@
         /* Ship Toggle Button */
         .ship-toggle {
             position: absolute;
-            bottom: 15px;
+            bottom: 90px;
             right: 15px;
             z-index: 1000;
             background: linear-gradient(135deg, rgba(33, 150, 243, 0.95), rgba(21, 101, 192, 0.95));
@@ -249,23 +249,23 @@
         
         /* V3 Ship Controls in Dropdown */
         .ship-controls-section {
-            padding: 15px;
+            padding: 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .ship-controls-header {
             text-align: center;
             color: #FFD700;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-family: 'Courier New', monospace;
         }
         
         .ship-control-group {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 8px;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 6px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
@@ -280,9 +280,9 @@
         }
         
         .ship-control-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-align: center;
         }
         
@@ -296,21 +296,23 @@
         
         .direction-controls {
             display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 6px;
+            margin-bottom: 8px;
         }
         
         .direction-btn {
             flex: 1;
-            padding: 8px 4px;
+            padding: 6px 2px;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
             color: white;
-            font-size: 10px;
+            font-size: 9px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
+            height: 28px;
+            line-height: 16px;
         }
         
         .direction-btn.selected {
@@ -322,25 +324,26 @@
         .speed-control {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         
         .speed-label {
-            font-size: 11px;
+            font-size: 10px;
             color: rgba(255, 255, 255, 0.8);
-            min-width: 45px;
+            min-width: 40px;
         }
         
         .speed-input {
             flex: 1;
-            padding: 6px 8px;
+            padding: 4px 6px;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 6px;
             color: white;
-            font-size: 12px;
+            font-size: 11px;
             font-family: 'Courier New', monospace;
             text-align: center;
+            height: 28px;
         }
         
         .speed-input:focus {
@@ -638,6 +641,7 @@
         .banner-status.success { background: rgba(56, 142, 60, 0.95); }
         .banner-status.error { background: rgba(198, 40, 40, 0.95); }
         .banner-minspeed.info { background: rgba(25, 118, 210, 0.95); }
+        .banner-distance { background: rgba(76, 175, 80, 0.95); }
 
         /* Waypoint label for route overlay (compact) */
         .route-waypoint {
@@ -747,7 +751,7 @@
     <body>
     <!-- Advisory Banners (top-center) -->
     <div id="advisoryBanners" class="advisory-banners" style="display:none;">
-        <div id="bannerStatus" class="banner banner-status"></div>
+        <div id="bannerDistance" class="banner banner-distance"></div>
         <div id="bannerMinSpeed" class="banner banner-minspeed"></div>
     </div>
     <!-- V3 Hamburger Menu with Ship Data -->
@@ -815,19 +819,32 @@
             
             <!-- Other Controls Section -->
             <div class="other-controls-section">
+                <!-- Akıntı etkisi -->
                 <div class="hamburger-item">
-                    <div class="hamburger-item-title">🌊 Layer Controls</div>
-                    <div class="hamburger-slider-container">
-                        <div class="hamburger-slider-label">
-                            <span>OpenSeaMap Opacity:</span>
-                        </div>
-                        <input type="range" id="mobileOpacitySlider" class="hamburger-slider" min="0" max="100" value="30">
-                        <div class="hamburger-value-display">
-                            Value: <span id="mobileOpacityValue">30</span>%
-                        </div>
+                    <div class="hamburger-toggle">
+                        <span class="hamburger-item-title">🌊 Akıntı etkisi:</span>
+                        <label class="mobile-toggle-switch">
+                            <input type="checkbox" id="mobileCurrentAdvantageToggle" checked>
+                            <span class="mobile-toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div id="mobileCurrentAdvantageDisplay" style="font-size: 11px; opacity: 0.8; margin-top: 5px;">
+                        Akıntı etkisi aktif
                     </div>
                 </div>
-                
+
+                <!-- Show/Hide Route -->
+                <div class="hamburger-item">
+                    <div class="hamburger-toggle">
+                        <span class="hamburger-item-title">🗺️ Show/Hide Route:</span>
+                        <label class="mobile-toggle-switch">
+                            <input type="checkbox" id="mobileRoutesToggle" checked>
+                            <span class="mobile-toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Dark Mode -->
                 <div class="hamburger-item">
                     <div class="hamburger-toggle">
                         <span class="hamburger-item-title">🌙 Dark Mode:</span>
@@ -838,26 +855,17 @@
                     </div>
                 </div>
 
+                <!-- Layer Controls -->
                 <div class="hamburger-item">
-                    <div class="hamburger-toggle">
-                        <span class="hamburger-item-title">🗺️ Show Routes:</span>
-                        <label class="mobile-toggle-switch">
-                            <input type="checkbox" id="mobileRoutesToggle">
-                            <span class="mobile-toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="hamburger-item">
-                    <div class="hamburger-toggle">
-                        <span class="hamburger-item-title">📍 Coordinates:</span>
-                        <label class="mobile-toggle-switch">
-                            <input type="checkbox" id="mobileCoordinatesToggle">
-                            <span class="mobile-toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div id="mobileCoordinatesDisplay" style="font-size: 11px; opacity: 0.8; margin-top: 5px; display: none;">
-                        Lat: --.----- Lng: ---.-----
+                    <div class="hamburger-item-title">🌊 Layer Controls</div>
+                    <div class="hamburger-slider-container">
+                        <div class="hamburger-slider-label">
+                            <span>OpenSeaMap Opacity:</span>
+                        </div>
+                        <input type="range" id="mobileOpacitySlider" class="hamburger-slider" min="0" max="100" value="30">
+                        <div class="hamburger-value-display">
+                            Value: <span id="mobileOpacityValue">30</span>%
+                        </div>
                     </div>
                 </div>
             </div>
@@ -912,7 +920,7 @@
         let otherShipMarker = null;
 
         // Route overlay controls
-        let routesVisible = false;
+        let routesVisible = true;
         const routeOverlays = { lines: {}, waypoints: {} }; // keyed by routeId
         
         // Ship class for managing individual ships
@@ -931,10 +939,13 @@
             }
             
             getStartingWaypoints() {
-                const coords = ROUTES[this.routeId].coords;
-                // Our route arrays are defined South -> North
-                // For northbound return as-is, for southbound return reversed
-                return this.direction === 'northbound' ? [...coords] : [...coords].reverse();
+                const route = ROUTES[this.routeId];
+                // Default definition for coords is South -> North
+                // Use explicit southbound coords when provided; otherwise reverse default
+                if (this.direction === 'southbound' && route.coordsSouthbound) {
+                    return [...route.coordsSouthbound];
+                }
+                return this.direction === 'northbound' ? [...route.coords] : [...route.coords].reverse();
             }
             
             getStartingPosition() {
@@ -948,11 +959,29 @@
         const ROUTES = {
             sancak: {
                 id: 'sancak', name: 'Sancak Hat', color: '#8A2BE2',
-                coords: [[40.958136,28.987145],[40.990218,28.997789],[41.019092,28.997982],[41.024038,29.000982],[41.051108,29.046349],[41.069258,29.052381],[41.07438,29.053932],[41.081901,29.062855],[41.099546,29.062341],[41.10505,29.065014],[41.119176,29.086437],[41.122173,29.085274],[41.147458,29.061482],[41.156426,29.061102],[41.179615,29.085255],[41.19303,29.105648],[41.195663,29.109615],[41.201627,29.115277],[41.211146,29.124278]]
+                // South -> North (default)
+                coords: [[40.958136,28.987145],[40.990218,28.997789],[41.019092,28.997982],[41.024038,29.000982],[41.051108,29.046349],[41.069258,29.052381],[41.07438,29.053932],[41.081901,29.062855],[41.099546,29.062341],[41.10505,29.065014],[41.119176,29.086437],[41.122173,29.085274],[41.147458,29.061482],[41.156426,29.061102],[41.179615,29.085255],[41.19303,29.105648],[41.195663,29.109615],[41.201627,29.115277],[41.211146,29.124278]],
+                // Southbound override (North -> South)
+                coordsSouthbound: [
+                    [41.213283,29.119241],[41.203127,29.111410],[41.181070,29.082771],[41.156648,29.056443],
+                    [41.148243,29.056269],[41.125494,29.076853],[41.122910,29.077748],[41.104423,29.060519],
+                    [41.101691,29.058952],[41.083056,29.059360],[41.074904,29.050634],[41.067693,29.048311],
+                    [41.049526,29.036824],[41.046662,29.033149],[41.026724,28.996474],[41.019578,28.992074],
+                    [41.004995,28.991895],[40.991191,28.991780]
+                ]
             },
             orta: {
                 id: 'orta', name: 'Orta Kanal', color: '#FF8C00',
-                coords: [[40.958136,28.987145],[40.990218,28.997789],[41.019092,28.997982],[41.026035,28.999968],[41.050299,29.042151],[41.074474,29.052459],[41.082238,29.060447],[41.099104,29.060643],[41.10535,29.063236],[41.119642,29.080426],[41.124487,29.080577],[41.147697,29.058349],[41.15553,29.058267],[41.180336,29.084119],[41.194786,29.103576],[41.202343,29.113727],[41.212305,29.12166]]
+                // South -> North (default)
+                coords: [[40.958136,28.987145],[40.990218,28.997789],[41.019092,28.997982],[41.026035,28.999968],[41.050299,29.042151],[41.074474,29.052459],[41.082238,29.060447],[41.099104,29.060643],[41.10535,29.063236],[41.119642,29.080426],[41.124487,29.080577],[41.147697,29.058349],[41.15553,29.058267],[41.180336,29.084119],[41.194786,29.103576],[41.202343,29.113727],[41.212305,29.12166]],
+                // Southbound override (North -> South)
+                coordsSouthbound: [
+                    [41.212305,29.121660],[41.202343,29.113727],[41.194786,29.103576],[41.180336,29.084119],
+                    [41.155530,29.058267],[41.147697,29.058349],[41.124487,29.080577],[41.119642,29.080426],
+                    [41.105350,29.063236],[41.099104,29.060643],[41.082238,29.060447],[41.074474,29.052459],
+                    [41.050299,29.042151],[41.026035,28.999968],[41.019092,28.997982],[40.990218,28.997789],
+                    [40.958136,28.987145]
+                ]
             },
             iskele: {
                 id: 'iskele', name: 'İskele Hat', color: '#A52A2A',
@@ -973,7 +1002,7 @@
         
         // Map layers
         let openSeaMapLayer = null;
-        let coordinatesEnabled = false;
+        let currentAdvantageEnabled = true;
         let darkModeEnabled = false;
         
         // Define map boundaries to focus on the Istanbul Strait
@@ -1172,6 +1201,33 @@
             const ship = shipName === 'own' ? ownShip : otherShip;
             ship.direction = direction;
             
+            // Set default route to Orta Kanal for southbound ships
+            if (direction === 'southbound') {
+                ship.routeId = 'orta';
+                // Update the route select UI and disable İskele for southbound
+                const routeSelect = document.getElementById(shipName + 'RouteSelect');
+                if (routeSelect) {
+                    routeSelect.value = 'orta';
+                    // Remove İskele option entirely when southbound
+                    const iskeleOpt = routeSelect.querySelector('option[value="iskele"]');
+                    if (iskeleOpt) {
+                        iskeleOpt.remove();
+                    }
+                }
+            } else {
+                // Re-enable all options when switching back to northbound
+                const routeSelect = document.getElementById(shipName + 'RouteSelect');
+                if (routeSelect) {
+                    // Add İskele back if missing
+                    if (!routeSelect.querySelector('option[value="iskele"]')) {
+                        const opt = document.createElement('option');
+                        opt.value = 'iskele';
+                        opt.textContent = 'İskele Hat';
+                        routeSelect.appendChild(opt);
+                    }
+                }
+            }
+            
             // Update UI
             document.getElementById(shipName + 'Northbound').classList.remove('selected');
             document.getElementById(shipName + 'Southbound').classList.remove('selected');
@@ -1185,6 +1241,7 @@
                 startShipSimulation();
             }
             updateAdvisoryBanners();
+            updateRoutesOverlay();
         }
         
         // Project point onto line segment
@@ -1264,24 +1321,51 @@
             return (bearing + 360) % 360;
         }
 
-        // ===== Simple Current Advantage Model (SOG-based) =====
-        // We apply fixed, invisible advantages for northbound ships on the İskele route.
-        // - All input speeds are SOG (already current-adjusted). Advantages represent reduced adverse current.
-        // - Only northbound (south -> north) gets advantages; southbound behaves like the old system (no advantage).
-        // - İskele advantages (segment indices are zero-based: segment i is wp(i+1) -> wp(i+2)):
+        // ===== Simple Current Effect Model (SOG-based) =====
+        // We apply fixed, invisible current effects per route/segment.
+        // - All input speeds are SOG (already current-adjusted). Effects modify SOG to reflect local current.
+        // - İskele northbound:
         //     wp5–wp6:  +1.8 kts  => segment index 4
         //     wp6–wp7:  +1.0 kts  => segment index 5
-        //     wp11–wp12:+1.5 kts  => segment index 11
-        // - Other routes (sancak, orta) have no segment advantage.
-        // - No additional head start is applied; defaults place own at wp2 and other at wp3.
+        //     wp11–wp12:+1.0 kts  => segment index 10
+        // - Southbound effects (as specified):
+        //   Orta (SB, 17 WPs):
+        //     wp12–wp13: +1.5 kts => segment index 11
+        //     wp13–wp14: +1.0 kts => segment index 12
+        //   Sancak (SB, 18 WPs):
+        //     wp7–wp8:   -1.0 kts => segment index 6
+        //     wp12–wp13: +0.5 kts => segment index 11
+        //     wp13–wp15: +0.3 kts => segment indices 12 and 13
 
         function getSegmentEffectiveSpeedKts(ship, segmentIndex) {
             let speed = ship.speed; // SOG base input
-            if (ship.routeId === 'iskele' && ship.direction === 'northbound') {
-                if (segmentIndex === 4) speed += 1.8;      // wp5->wp6
-                else if (segmentIndex === 5) speed += 1.0; // wp6->wp7
-                else if (segmentIndex === 11) speed += 1.5; // wp11->wp12
+            let originalSpeed = speed;
+            
+            // Apply current effects only if toggle is enabled
+            if (currentAdvantageEnabled) {
+                if (ship.direction === 'northbound') {
+                    if (ship.routeId === 'iskele') {
+                        if (segmentIndex === 4) speed += 1.8;      // wp5->wp6
+                        else if (segmentIndex === 5) speed += 1.0; // wp6->wp7
+                        else if (segmentIndex === 10) speed += 1.0; // wp11->wp12
+                    } else if (ship.routeId === 'sancak') {
+                        // Northbound Sancak: wp12->wp13 = segment index 11
+                        if (segmentIndex === 11) speed += 0.6;
+                    }
+                } else if (ship.direction === 'southbound') {
+                    if (ship.routeId === 'orta' && ROUTES.orta.coordsSouthbound) {
+                        if (segmentIndex === 11) speed += 1.5; // wp12->wp13
+                        else if (segmentIndex === 12) speed += 1.0; // wp13->wp14
+                    } else if (ship.routeId === 'sancak' && ROUTES.sancak.coordsSouthbound) {
+                        if (segmentIndex === 6) speed -= 1.0; // wp7->wp8
+                        else if (segmentIndex === 11) speed += 0.5; // wp12->wp13
+                        else if (segmentIndex >= 12 && segmentIndex <= 13) speed += 0.3; // wp13->wp15
+                    }
+                }
             }
+            
+            // Debug logging removed
+            
             // Prevent zero/negative effective speeds
             return Math.max(speed, 0.1);
         }
@@ -1296,6 +1380,73 @@
                 dists.push(dist);
             }
             return dists;
+        }
+
+        // ===== Turning loss helpers (Option A approximated via distance windows) =====
+        function angleDiff(a, b) {
+            let d = Math.abs(a - b) % 360;
+            return d > 180 ? 360 - d : d;
+        }
+        function turnLossRatio(angleDeg) {
+            if (angleDeg < 10) return 0;
+            if (angleDeg < 20) return 0.05 + (angleDeg - 10) * (0.10 - 0.05) / 10; // 5%..10%
+            if (angleDeg < 30) return 0.10 + (angleDeg - 20) * (0.12 - 0.10) / 10; // 10%..12%
+            if (angleDeg < 40) return 0.12 + (angleDeg - 30) * (0.15 - 0.12) / 10; // 12%..15%
+            if (angleDeg < 50) return 0.15 + (angleDeg - 40) * (0.18 - 0.15) / 10; // 15%..18%
+            const up = 0.18 + Math.min(40, angleDeg - 50) * (0.25 - 0.18) / 40; // 18%..25%
+            return Math.min(0.25, up);
+        }
+        function tauDownMinutes(angleDeg) { return Math.min(1.2, 0.3 + 0.008 * angleDeg); }
+        function tauUpMinutes(angleDeg) { return Math.min(3.0, 0.6 + 0.03 * angleDeg); }
+        function getEffectiveSpeedWithTurn(ship, segIndex, offsetInSegNm, waypoints, distances) {
+            const currWith = getSegmentEffectiveSpeedKts(ship, segIndex);
+            const segLen = distances[segIndex] || 0;
+            if (segLen <= 0 || !isFinite(currWith)) return Math.max(0.1, currWith || ship.speed || 0.1);
+            const brgAt = (i) => calculateBearing(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1]);
+            const hasPrev = segIndex > 0;
+            const hasNext = segIndex + 1 < distances.length;
+            const prevWith = hasPrev ? getSegmentEffectiveSpeedKts(ship, segIndex - 1) : currWith;
+
+            // Angles at junctions
+            const angleAhead = hasNext ? angleDiff(brgAt(segIndex), brgAt(segIndex + 1)) : 0;
+            const angleBehind = hasPrev ? angleDiff(brgAt(segIndex - 1), brgAt(segIndex)) : 0;
+
+            // Tail (approaching next WP): ramp 0->1 over last Ltail nm
+            let tailFactor = 0;
+            if (hasNext && angleAhead >= 10) {
+                // Tail window shortened to 1/3 of previous length
+                const Ltail = Math.min(segLen, (currWith * tauDownMinutes(angleAhead) / 60) / 3);
+                const startTail = Math.max(0, segLen - Ltail);
+                if (offsetInSegNm >= startTail) {
+                    tailFactor = Math.min(1, (offsetInSegNm - startTail) / Math.max(0.0001, Ltail));
+                }
+            }
+
+            // Head (after previous WP): ramp 1->0 over first Lhead nm
+            let headFactor = 0;
+            if (hasPrev && angleBehind >= 10) {
+                const Lhead = Math.min(segLen, currWith * tauUpMinutes(angleBehind) / 60);
+                if (offsetInSegNm <= Lhead) {
+                    headFactor = Math.max(0, 1 - (offsetInSegNm / Math.max(0.0001, Lhead)));
+                }
+            }
+
+            // Candidate speeds
+            let eff = currWith;
+            if (tailFactor > 0) {
+                const lossTail = turnLossRatio(angleAhead);
+                const candidateTail = currWith * (1 - lossTail * tailFactor);
+                eff = Math.min(eff, candidateTail);
+            }
+            if (headFactor > 0) {
+                const lossHead = turnLossRatio(angleBehind);
+                // Blend from pre-turn penalized speed to current baseline across head window
+                const preTurnDip = prevWith * (1 - lossHead);
+                const blended = headFactor * preTurnDip + (1 - headFactor) * currWith;
+                eff = Math.min(eff, blended);
+            }
+
+            return Math.max(0.1, eff);
         }
 
         function getTotalDistance(distances) {
@@ -1324,7 +1475,10 @@
                     segmentIndex: 0,
                     nextWaypoint: 1,
                     distanceToNext: distances[0] || 0,
-                    eta: 0
+                    eta: 0,
+                    segmentLengthNm: distances[0] || 0,
+                    offsetInSegmentNm: 0,
+                    segmentProgress: 0
                 };
             }
 
@@ -1345,7 +1499,7 @@
                     waypoints[last - 1][0], waypoints[last - 1][1],
                     waypoints[last][0], waypoints[last][1]
                 );
-                return { position: waypoints[last], bearing: brg, segmentIndex: last - 1, nextWaypoint: null, distanceToNext: 0, eta: 0 };
+                return { position: waypoints[last], bearing: brg, segmentIndex: last - 1, nextWaypoint: null, distanceToNext: 0, eta: 0, segmentLengthNm: distances[last - 1] || 0, offsetInSegmentNm: distances[last - 1] || 0, segmentProgress: 1 };
             }
 
             let offsetInSeg = start - acc; // nm
@@ -1360,7 +1514,7 @@
                 const lng = lng1 + (lng2 - lng1) * progress;
                 const brg = calculateBearing(lat1, lng1, lat2, lng2);
                 const distToNext = Math.max(0, segLen - offsetInSeg);
-                const effNmPerMin = getSegmentEffectiveSpeedKts(ship, segIndex) / 60.0;
+                const effNmPerMin = getEffectiveSpeedWithTurn(ship, segIndex, offsetInSeg, waypoints, distances) / 60.0;
                 const eta = effNmPerMin > 0 ? (distToNext / effNmPerMin) : 0;
                 return {
                     position: [lat, lng],
@@ -1368,13 +1522,16 @@
                     segmentIndex: segIndex,
                     nextWaypoint: segIndex + 1 < waypoints.length ? segIndex + 1 : null,
                     distanceToNext: distToNext,
-                    eta: eta
+                    eta: eta,
+                    segmentLengthNm: segLen,
+                    offsetInSegmentNm: offsetInSeg,
+                    segmentProgress: progress
                 };
             }
 
             while (remainingTime > 0 && segIndex < distances.length) {
                 const segLen = distances[segIndex];
-                const effKts = getSegmentEffectiveSpeedKts(ship, segIndex);
+                const effKts = getEffectiveSpeedWithTurn(ship, segIndex, offsetInSeg, waypoints, distances);
                 const effNmPerMin = effKts / 60.0;
                 const remainingSegDist = Math.max(0, segLen - offsetInSeg);
                 const timeToFinishSeg = effNmPerMin > 0 ? (remainingSegDist / effNmPerMin) : Infinity;
@@ -1396,7 +1553,10 @@
                         segmentIndex: segIndex,
                         nextWaypoint: segIndex + 1 < waypoints.length ? segIndex + 1 : null,
                         distanceToNext: distToNext,
-                        eta: eta
+                        eta: eta,
+                        segmentLengthNm: segLen,
+                        offsetInSegmentNm: Math.min(segLen, offsetInSeg + moved),
+                        segmentProgress: progress
                     };
                 }
 
@@ -1419,7 +1579,10 @@
                 segmentIndex: lastIndex - 1,
                 nextWaypoint: null,
                 distanceToNext: 0,
-                eta: 0
+                eta: 0,
+                segmentLengthNm: distances[lastIndex - 1] || 0,
+                offsetInSegmentNm: distances[lastIndex - 1] || 0,
+                segmentProgress: 1
             };
         }
 
@@ -1570,53 +1733,49 @@
 
         function updateAdvisoryBanners() {
             const container = document.getElementById('advisoryBanners');
-            const statusEl = document.getElementById('bannerStatus');
+            const distEl = document.getElementById('bannerDistance');
             const minEl = document.getElementById('bannerMinSpeed');
 
-            // Northbound only
+            if (!shipSimulationActive) { container.style.display = 'none'; return; }
+
+            // Distance between ships (always shown during simulation)
+            const ownPos = getShipPositionAtTime(ownShip, currentTime).position;
+            const otherPos = getShipPositionAtTime(otherShip, currentTime).position;
+            const nm = calculateDistance(ownPos[0], ownPos[1], otherPos[0], otherPos[1]);
+            distEl.className = 'banner banner-distance';
+            distEl.textContent = `İki gemi arası mesafe: ${nm.toFixed(2)} NM`;
+
+            // Minimum speed banner (northbound scenario only)
             const bothNorth = ownShip.direction === 'northbound' && otherShip.direction === 'northbound';
-            if (!bothNorth) { container.style.display = 'none'; return; }
-
-            // If own already ahead at t=0, hide banners
-            const own0 = getShipPositionAtTime(ownShip, 0);
-            const other0 = getShipPositionAtTime(otherShip, 0);
-            const a0 = progressAlongReference(own0.position[0], own0.position[1]);
-            const b0 = progressAlongReference(other0.position[0], other0.position[1]);
-            if (a0 >= b0) { container.style.display = 'none'; return; }
-
-            const thr = getKandilliThresholdAlong();
-            const evt = calculateOvertakingEvent();
-            const canBefore = evt && evt.along <= thr;
-
-            // Status banner (green/red)
-            if (canBefore) {
-                statusEl.className = 'banner banner-status success';
-                statusEl.textContent = 'Bu süratle Kandilli öncesi geçilebilir.';
-            } else {
-                statusEl.className = 'banner banner-status error';
-                statusEl.textContent = 'Bu süratle Kandilli öncesi geçiş mümkün değil.';
-            }
-
-            // Minimum speed banner (blue)
-            let minText = '';
-            // Binary search 0.1..15.0 kts
-            let lo = 0.1, hi = 15.0, found = null;
-            for (let i = 0; i < 22; i++) {
-                const mid = (lo + hi) / 2;
-                if (overtakesBeforeThresholdWithOwnSpeed(mid)) {
-                    found = mid; hi = mid;
-                } else {
-                    lo = mid;
-                }
-            }
+            if (bothNorth) {
+                // If own already ahead at t=0, hide min speed only
+                const own0 = getShipPositionAtTime(ownShip, 0);
+                const other0 = getShipPositionAtTime(otherShip, 0);
+                const a0 = progressAlongReference(own0.position[0], own0.position[1]);
+                const b0 = progressAlongReference(other0.position[0], other0.position[1]);
+                if (a0 < b0) {
+                    let lo = 0.1, hi = 15.0, found = null;
+                    for (let i = 0; i < 22; i++) {
+                        const mid = (lo + hi) / 2;
+                        if (overtakesBeforeThresholdWithOwnSpeed(mid)) { found = mid; hi = mid; }
+                        else { lo = mid; }
+                    }
+                    let minText = '';
             if (found == null) {
-                minText = 'Diğer gemiye Arnavutköy Feneri’nde yetişmek için minimum süratiniz >15 kts olmalı.';
+                minText = 'Arnavutköy Fenerinde yetişme sürati >15.0 kts.';
             } else {
                 const roundedUp = Math.ceil(found * 10) / 10;
-                minText = `Diğer gemiye Arnavutköy Feneri’nde yetişmek için minimum süratiniz ${roundedUp.toFixed(1)} kts olmalı.`;
+                minText = `Arnavutköy Fenerinde yetişme sürati ${roundedUp.toFixed(1)} kts.`;
             }
-            minEl.className = 'banner banner-minspeed info';
-            minEl.textContent = minText;
+                    minEl.style.display = '';
+                    minEl.className = 'banner banner-minspeed info';
+                    minEl.textContent = minText;
+                } else {
+                    minEl.style.display = 'none';
+                }
+            } else {
+                minEl.style.display = 'none';
+            }
 
             container.style.display = 'flex';
         }
@@ -1659,6 +1818,8 @@
             
             // Update overtaking point (reference: Orta Kanal)
             updateDynamicMeetingPoint();
+            // Also update banners dynamically on time slider changes
+            updateAdvisoryBanners();
         }
         
         
@@ -1761,6 +1922,7 @@
             
             // Update UI
             document.getElementById('shipToggle').classList.remove('active');
+
         }
         
         // Toggle ship simulation
@@ -1804,6 +1966,10 @@
         ownRouteSelect.value = ownShip.routeId;
         otherRouteSelect.value = otherShip.routeId;
         ownRouteSelect.addEventListener('change', function(e) {
+            // Prevent selecting İskele when southbound
+            if (ownShip.direction === 'southbound' && e.target.value === 'iskele') {
+                e.target.value = 'orta';
+            }
             ownShip.routeId = e.target.value;
             if (shipSimulationActive) {
                 startShipSimulation();
@@ -1812,6 +1978,10 @@
             updateAdvisoryBanners();
         });
         otherRouteSelect.addEventListener('change', function(e) {
+            // Prevent selecting İskele when southbound
+            if (otherShip.direction === 'southbound' && e.target.value === 'iskele') {
+                e.target.value = 'orta';
+            }
             otherShip.routeId = e.target.value;
             if (shipSimulationActive) {
                 startShipSimulation();
@@ -1868,14 +2038,20 @@
             const route = ROUTES[routeId];
             if (!route) return;
 
+            // Choose coords by current usage: if any ship uses this route southbound and SB coords exist, prefer those
+            const useSB = ((ownShip.routeId === routeId && ownShip.direction === 'southbound') ||
+                           (otherShip.routeId === routeId && otherShip.direction === 'southbound')) &&
+                           Array.isArray(route.coordsSouthbound);
+            const coordsToUse = useSB ? route.coordsSouthbound : route.coords;
+
             // Draw polyline (slim but visible)
-            const line = L.polyline(route.coords, { color: route.color, weight: 3, opacity: 0.85 });
+            const line = L.polyline(coordsToUse, { color: route.color, weight: 3, opacity: 0.85 });
             line.addTo(map);
             routeOverlays.lines[routeId] = line;
 
             // Add waypoints markers (compact numeric labels)
             const markers = [];
-            route.coords.forEach((coord, idx) => {
+            coordsToUse.forEach((coord, idx) => {
                 const num = String(idx + 1);
                 const html = `<div class=\"route-waypoint\"><span class=\"route-wp-dot\" style=\"background:${route.color}\"></span><span class=\"route-wp-num\">${num}</span></div>`;
                 const icon = L.divIcon({
@@ -1945,31 +2121,81 @@
             updateRoutesOverlay();
         });
 
-        document.getElementById('mobileCoordinatesToggle').addEventListener('change', function(e) {
-            coordinatesEnabled = e.target.checked;
-            const display = document.getElementById('mobileCoordinatesDisplay');
-            if (coordinatesEnabled) {
-                display.style.display = 'block';
+        document.getElementById('mobileCurrentAdvantageToggle').addEventListener('change', function(e) {
+            currentAdvantageEnabled = e.target.checked;
+            const display = document.getElementById('mobileCurrentAdvantageDisplay');
+            if (currentAdvantageEnabled) {
+                display.textContent = 'Akıntı etkisi aktif';
             } else {
-                display.style.display = 'none';
+                display.textContent = 'Akıntı etkisi deaktif';
             }
-        });
-        
-        // Update coordinates display
-        map.on('mousemove', function(e) {
-            if (coordinatesEnabled) {
-                const lat = e.latlng.lat.toFixed(5);
-                const lng = e.latlng.lng.toFixed(5);
-                document.getElementById('mobileCoordinatesDisplay').textContent = `Lat: ${lat} Lng: ${lng}`;
+            // Recalculate positions when advantage is toggled
+            if (shipSimulationActive) {
+                updateShipPositions();
+                updateDynamicMeetingPoint();
+                updateAdvisoryBanners();
             }
         });
         
         // Initialize
-        console.log('Istanbul Strait Nautical Map V3 initialized');
         // Initialize routes overlay (hidden by default)
         updateRoutesOverlay();
         // Initialize advisory banners
         updateAdvisoryBanners();
+
+    </script>
+    <!-- Variant v3: Mini HUD for akıntı etkisi -->
+    <style>
+      .mini-hud { position: fixed; right: 10px; bottom: 10px; z-index: 5000; background: rgba(0,0,0,0.55); color: #fff; font-family: 'Courier New', monospace; font-size: 12px; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); min-width: 200px; }
+      .mini-hud .rem { font-size: 11px; opacity: 0.8; margin-top: 4px; }
+    </style>
+    <script>
+      window.addEventListener('load', function(){
+      (function(){
+        const EFFECT_THRESHOLD = 0.3;
+        let hud=null, ownEl=null, othEl=null, remEl=null; let lastReminderKey=null;
+        // Glow overlays (like v4 but without labels)
+        let glowOwnLine=null, glowOthLine=null;
+        function ensure(){ if(!hud){ hud=document.createElement('div'); hud.className='mini-hud'; ownEl=document.createElement('div'); othEl=document.createElement('div'); remEl=document.createElement('div'); remEl.className='rem'; remEl.style.display='none'; hud.appendChild(ownEl); hud.appendChild(othEl); hud.appendChild(remEl); document.body.appendChild(hud);} }
+        function routeDisplayName(id){ return id==='orta'?'Orta Kanal': id==='sancak'?'Sancak Hat':'İskele Hat'; }
+        function wpRangeLabel(ship, segIndex){ const id=ship.routeId, dir=ship.direction; if(id==='iskele'&&dir==='northbound'){ if(segIndex===4)return'wp5–wp6'; if(segIndex===5)return'wp6–wp7'; if(segIndex===10)return'wp11–wp12'; } if(id==='sancak'&&dir==='southbound'){ if(segIndex===6)return'wp7–wp8'; if(segIndex===11)return'wp12–wp13'; if(segIndex===12||segIndex===13)return'wp13–wp15'; } if(id==='orta'&&dir==='southbound'){ if(segIndex===11)return'wp12–wp13'; if(segIndex===12)return'wp13–wp14'; } return `wp${segIndex+1}–wp${segIndex+2}`; }
+        // HUD message builder (show revised speed)
+        function buildMsgSpeed(ship, seg, effKts){ return `${routeDisplayName(ship.routeId)} ${wpRangeLabel(ship,seg)}: gemi sürati ${effKts.toFixed(1)} kts`; }
+        function contextKey(){ try{ return `${ownShip.routeId}:${ownShip.direction}|${otherShip.routeId}:${otherShip.direction}|${currentAdvantageEnabled?1:0}`;}catch{return'na';}}
+        
+        function setGlow(lineRef, wps, seg, delta){ const a=wps[seg], b=wps[seg+1]; if(!a||!b) return lineRef; const color = delta>=0 ? 'rgba(76,175,80,0.85)' : 'rgba(198,40,40,0.85)'; if(!lineRef){ lineRef = L.polyline([a,b], { color, weight: 7, opacity: 0.9 }).addTo(map); } else { lineRef.setStyle({ color }); lineRef.setLatLngs([a,b]); if(!map.hasLayer(lineRef)) lineRef.addTo(map); } return lineRef; }
+        function clearGlow(){ if(glowOwnLine) try{ map.removeLayer(glowOwnLine);}catch{}; if(glowOthLine) try{ map.removeLayer(glowOthLine);}catch{}; glowOwnLine=glowOthLine=null; }
+        function poll(){ if (typeof shipSimulationActive === 'undefined') { return; } if(!shipSimulationActive){ if(hud) hud.style.display='none'; clearGlow(); return; } ensure(); hud.style.display='block'; try { const own=getShipPositionAtTime(ownShip,currentTime), oth=getShipPositionAtTime(otherShip,currentTime); const os=own.segmentIndex, ts=oth.segmentIndex;
+          const owps = ownShip.getStartingWaypoints();
+          const odists = getSegmentDistances(owps);
+          const twps = otherShip.getStartingWaypoints();
+          const tdists = getSegmentDistances(twps);
+          const oOffset = typeof own.offsetInSegmentNm === 'number' ? own.offsetInSegmentNm : 0;
+          const tOffset = typeof oth.offsetInSegmentNm === 'number' ? oth.offsetInSegmentNm : 0;
+          const oEff = getEffectiveSpeedWithTurn(ownShip, os, oOffset, owps, odists);
+          const tEff = getEffectiveSpeedWithTurn(otherShip, ts, tOffset, twps, tdists);
+          const od = oEff - ownShip.speed;
+          const td = tEff - otherShip.speed;
+          // Update glow overlays
+          clearGlow();
+          if (Math.abs(od) >= EFFECT_THRESHOLD) glowOwnLine = setGlow(glowOwnLine, owps, os, od);
+          if (Math.abs(td) >= EFFECT_THRESHOLD) glowOthLine = setGlow(glowOthLine, twps, ts, td);
+          // HUD shows revised speeds always
+          ownEl.textContent = buildMsgSpeed(ownShip, os, oEff);
+          othEl.textContent = buildMsgSpeed(otherShip, ts, tEff);
+          const bothLow=Math.abs(od)<EFFECT_THRESHOLD && Math.abs(td)<EFFECT_THRESHOLD; const ctx=contextKey(); if(bothLow && ctx!==lastReminderKey){ remEl.textContent='Akıntı yoksa akıntı etkisi özelliğini kapatabilirsiniz.'; remEl.style.display='block'; setTimeout(()=>{ remEl.style.display='none'; }, 4000); lastReminderKey=ctx; }
+        } catch(e){} }
+        setInterval(poll, 400);
+        // Reset reminder context on key UI changes so it can show again when relevant
+        ['mobileCurrentAdvantageToggle','ownRouteSelect','otherRouteSelect','ownNorthbound','ownSouthbound','otherNorthbound','otherSouthbound'].forEach(id=>{
+          const el = document.getElementById(id);
+          if (el) {
+            const evt = (id.includes('Select')||id.includes('Toggle')) ? 'change' : 'click';
+            el.addEventListener(evt, ()=>{ lastReminderKey = null; });
+          }
+        });
+      })();
+      });
     </script>
 </body>
 </html>
