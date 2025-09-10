@@ -744,6 +744,70 @@
             100% { transform: scale(1.5); opacity: 0; }
         }
 
+        /* ===== Dark Mode: Low-Glow, Night-Friendly Palette ===== */
+        body.dark-mode { background-color: #0b0f12; color: #cfd8dc; }
+        body.dark-mode .leaflet-container { background-color: #0b0f12; }
+        
+        /* Panels and controls */
+        body.dark-mode .header-time-slider { background: rgba(12,14,18,0.9); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; color: #e0e0e0; }
+        body.dark-mode .header-time-slider input[type="range"]{ background: rgba(255,255,255,0.18); }
+        body.dark-mode .header-time-slider input[type="range"]::-webkit-slider-thumb{ background:#78909c; border-color:#cfd8dc; }
+        body.dark-mode .header-time-slider input[type="range"]::-moz-range-thumb{ background:#78909c; border-color:#cfd8dc; }
+
+        body.dark-mode .hamburger-button{ background: rgba(20,24,28,0.95); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
+        body.dark-mode .hamburger-dropdown{ background: rgba(12,14,18,0.98); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
+        body.dark-mode .hamburger-dropdown::before{ border-bottom-color: rgba(255,255,255,0.08); }
+        body.dark-mode .ship-controls-header{ color: #b0bec5; }
+        body.dark-mode .ship-control-group{ background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); }
+        body.dark-mode .ship-control-group.own-ship{ background: rgba(120,144,156,0.08); border-color: rgba(120,144,156,0.18); }
+        body.dark-mode .ship-control-group.other-ship{ background: rgba(255,152,0,0.05); border-color: rgba(255,152,0,0.16); }
+        body.dark-mode .direction-btn{ background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); }
+        body.dark-mode .direction-btn.selected{ background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.28); box-shadow: none; }
+        body.dark-mode .speed-input{ background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); }
+        /* Dark mode: tone down toggle switch blue */
+        body.dark-mode input:checked + .mobile-toggle-slider { background-color: rgba(76, 118, 170, 0.8); }
+        body.dark-mode .mobile-toggle-slider { background-color: rgba(255,255,255,0.18); }
+        body.dark-mode .mobile-toggle-slider:before { background-color: #b0bec5; }
+
+        /* Ship toggle */
+        body.dark-mode .ship-toggle{ background: rgba(26,32,44,0.9); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
+        body.dark-mode .ship-toggle.active{ animation: none; border-color: rgba(139,195,74,0.25); }
+
+        /* Banners */
+        body.dark-mode .banner{ box-shadow: none; border: 1px solid rgba(255,255,255,0.12); color: #f2f2f2; background: rgba(16,20,24,0.94); }
+        body.dark-mode .banner-distance{ background: rgba(76,175,80,0.60); }
+        body.dark-mode .banner-minspeed.info{ background: rgba(25,118,210,0.60); }
+        body.dark-mode .banner-status.success{ background: rgba(56,142,60,0.60); }
+        body.dark-mode .banner-status.error{ background: rgba(198,40,40,0.60); }
+
+        /* Route waypoint labels */
+        body.dark-mode .route-wp-dot{ box-shadow: none; border: 1px solid rgba(255,255,255,0.12); opacity: 0.75; }
+        body.dark-mode .route-wp-num{ color: rgba(255,255,255,0.7); text-shadow: none; }
+
+        /* Ship markers */
+        body.dark-mode .ship-marker{ background: rgba(255,255,255,0.06); box-shadow: none; }
+        body.dark-mode .ship-marker.own-ship{ border-color: rgba(33,150,243,0.6); }
+        body.dark-mode .ship-marker.other-ship{ border-color: rgba(255,152,0,0.6); }
+        body.dark-mode .ship-marker.own-ship::before{ border-bottom-color: rgba(33,150,243,0.6); }
+        body.dark-mode .ship-marker.other-ship::before{ border-bottom-color: rgba(255,152,0,0.6); }
+
+        /* Meeting markers - no glow, subdued */
+        body.dark-mode .meeting-point-marker,
+        body.dark-mode .custom-meeting-marker,
+        body.dark-mode .single-meeting-marker{
+            animation: none !important;
+            box-shadow: none !important;
+            background: #a33b3b !important;
+            border-color: rgba(255,255,255,0.12) !important;
+        }
+        body.dark-mode .meeting-point-marker::before,
+        body.dark-mode .custom-meeting-marker::before{
+            color: #f0f0f0;
+        }
+
+        /* HUD */
+        body.dark-mode .mini-hud{ background: rgba(10,12,14,0.65); border: 1px solid rgba(255,255,255,0.10); }
+
         
     </style>
 </head>
@@ -894,7 +958,7 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
             crossorigin=""></script>
     
-    <script>
+        <script>
         // Istanbul Strait coordinates and boundaries
         const ISTANBUL_STRAIT_CENTER = [41.035, 29.059];
         const INITIAL_ZOOM = 12;
@@ -1037,7 +1101,11 @@
         // (Per-ship distances are computed on-the-fly; no global route distances needed)
         
         // Base map layer
-        const baseLayer = L.tileLayer('https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        const BASEMAPS = {
+            light: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+            dark:  'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+        };
+        let baseLayer = L.tileLayer(BASEMAPS.light, {
             attribution: '© OpenStreetMap contributors, © CartoDB',
             maxZoom: MAX_ZOOM
         });
@@ -1104,24 +1172,14 @@
         };
 
         function createManualTSS() {
-            const centerLineStyle = {
-                color: '#eb66c8',
-                weight: 8,
-                opacity: 0.9,
-                dashArray: null
-            };
-            const easternBoundaryStyle = {
-                color: '#eb66c8',
-                weight: 3,
-                opacity: 0.9,
-                dashArray: '10, 5'
-            };
-            const westernBoundaryStyle = {
-                color: '#eb66c8',
-                weight: 3,
-                opacity: 0.9,
-                dashArray: '10, 5'
-            };
+            const isDark = typeof darkModeEnabled !== 'undefined' && darkModeEnabled;
+            const centerLineStyle = isDark ?
+                { color: '#9a7fa0', weight: 6, opacity: 0.6, dashArray: null } :
+                { color: '#eb66c8', weight: 8, opacity: 0.9, dashArray: null };
+            const boundaryCommon = isDark ? { color: '#9a7fa0', weight: 2, opacity: 0.6, dashArray: '10, 5' }
+                                          : { color: '#eb66c8', weight: 3, opacity: 0.9, dashArray: '10, 5' };
+            const easternBoundaryStyle = boundaryCommon;
+            const westernBoundaryStyle = boundaryCommon;
 
             tssLayerGroup.clearLayers();
 
@@ -1324,10 +1382,15 @@
         // ===== Simple Current Effect Model (SOG-based) =====
         // We apply fixed, invisible current effects per route/segment.
         // - All input speeds are SOG (already current-adjusted). Effects modify SOG to reflect local current.
-        // - İskele northbound:
-        //     wp5–wp6:  +1.8 kts  => segment index 4
-        //     wp6–wp7:  +1.0 kts  => segment index 5
-        //     wp11–wp12:+1.0 kts  => segment index 10
+        // - İskele northbound (updated):
+        //     wp5–wp6:   +1.3 kts  => segment index 4
+        //     wp6–wp7:   +0.5 kts  => segment index 5
+        //     wp7–wp9:   -0.3 kts  => segment indices 6 and 7
+        //     wp11–wp12: +1.0 kts  => segment index 10 (unchanged)
+        //     wp13–wp15: +0.5 kts  => segment indices 12 and 13
+        // - Orta northbound (updated):
+        //     wp5–wp6: last 25%: -0.3 kts (position-based)
+        //     wp6–wp7:          -0.3 kts (entire segment)
         // - Southbound effects (as specified):
         //   Orta (SB, 17 WPs):
         //     wp12–wp13: +1.5 kts => segment index 11
@@ -1345,9 +1408,13 @@
             if (currentAdvantageEnabled) {
                 if (ship.direction === 'northbound') {
                     if (ship.routeId === 'iskele') {
-                        if (segmentIndex === 4) speed += 1.8;      // wp5->wp6
-                        else if (segmentIndex === 5) speed += 1.0; // wp6->wp7
-                        else if (segmentIndex === 10) speed += 1.0; // wp11->wp12
+                        if (segmentIndex === 4) speed += 1.3;       // wp5->wp6 (updated)
+                        else if (segmentIndex === 5) speed += 0.5;  // wp6->wp7 (updated)
+                        else if (segmentIndex === 10) speed += 1.0; // wp11->wp12 (unchanged)
+                        else if (segmentIndex === 6 || segmentIndex === 7) speed -= 0.3; // wp7->wp9 (new)
+                        else if (segmentIndex === 12 || segmentIndex === 13) speed += 0.5; // wp13->wp15 (new)
+                    } else if (ship.routeId === 'orta') {
+                        if (segmentIndex === 5) speed -= 0.3; // wp6->wp7 (new)
                     } else if (ship.routeId === 'sancak') {
                         // Northbound Sancak: wp12->wp13 = segment index 11
                         if (segmentIndex === 11) speed += 0.6;
@@ -1444,6 +1511,15 @@
                 const preTurnDip = prevWith * (1 - lossHead);
                 const blended = headFactor * preTurnDip + (1 - headFactor) * currWith;
                 eff = Math.min(eff, blended);
+            }
+
+            // Additional partial current effect (only last 25% of segment):
+            // Northbound Orta route, wp5->wp6 (segment index 4): apply -0.3 kts only near wp6
+            if (currentAdvantageEnabled && ship.direction === 'northbound' && ship.routeId === 'orta' && segIndex === 4) {
+                const segLenLocal = segLen; // already defined above
+                if (segLenLocal > 0 && offsetInSegNm >= 0.75 * segLenLocal) {
+                    eff -= 0.3;
+                }
             }
 
             return Math.max(0.1, eff);
@@ -1636,11 +1712,13 @@
             return waypoints[waypoints.length - 1];
         }
 
-        function calculateOvertakingEvent() {
-            // Only meaningful when both ships move in the same direction
-            const bothNorth = ownShip.direction === 'northbound' && otherShip.direction === 'northbound';
-            const bothSouth = ownShip.direction === 'southbound' && otherShip.direction === 'southbound';
-            if (!bothNorth && !bothSouth) return null;
+        function calculateEncounterEvent() {
+            // Handle both overtaking (same direction) and meeting (opposite directions)
+            const ownNorth = ownShip.direction === 'northbound';
+            const othNorth = otherShip.direction === 'northbound';
+            const bothNorth = ownNorth && othNorth;
+            const bothSouth = !ownNorth && !othNorth;
+            const opposite = ownNorth !== othNorth;
 
             const maxTime = 120; // minutes
             const dt = 0.25; // minutes
@@ -1650,18 +1728,28 @@
                 const p = getShipPositionAtTime(otherShip, t);
                 const a = progressAlongReference(o.position[0], o.position[1]);
                 const b = progressAlongReference(p.position[0], p.position[1]);
-                // For northbound, catch-up when a - b >= 0
-                // For southbound, catch-up when b - a >= 0 (own becomes more south or equal)
-                return bothNorth ? (a - b) : (b - a);
+                // Choose monotone-increasing diff for root finding
+                if (bothNorth) return a - b;           // catch-up northbound
+                if (bothSouth) return b - a;           // catch-up southbound
+                if (ownNorth && !othNorth) return a - b; // meeting: a increases, b decreases
+                if (!ownNorth && othNorth) return b - a; // meeting: b increases, a decreases
+                return a - b;
             }
 
+            const type = (bothNorth || bothSouth) ? 'overtake' : 'meet';
+
             let f0 = alongDiff(0);
-            if (f0 >= 0) {
-                const o = getShipPositionAtTime(ownShip, 0);
-                const a = progressAlongReference(o.position[0], o.position[1]);
-                const { refCoords, refDistances } = getReferenceRouteAndDistances();
-                const point = getPointAlongRouteByDistance(refCoords, refDistances, a);
-                return { time: 0, point };
+            if (type === 'overtake') {
+                if (f0 >= 0) {
+                    const o = getShipPositionAtTime(ownShip, 0);
+                    const a = progressAlongReference(o.position[0], o.position[1]);
+                    const { refCoords, refDistances } = getReferenceRouteAndDistances();
+                    const point = getPointAlongRouteByDistance(refCoords, refDistances, a);
+                    return { time: 0, point, along: a, type };
+                }
+            } else { // meet
+                // If f0 >= 0 under our monotone diff, ships are diverging => no meeting ahead
+                if (f0 >= 0) return null;
             }
 
             let left = 0, right = null;
@@ -1671,7 +1759,7 @@
                 if (prevF <= 0 && ft >= 0) { right = t; left = prevT; break; }
                 prevT = t; prevF = ft;
             }
-            if (right === null) return null; // no overtake in window
+            if (right === null) return null; // no event in window
 
             for (let i = 0; i < 14; i++) {
                 const mid = (left + right) / 2;
@@ -1682,7 +1770,7 @@
             const a = progressAlongReference(o.position[0], o.position[1]);
             const { refCoords, refDistances } = getReferenceRouteAndDistances();
             const point = getPointAlongRouteByDistance(refCoords, refDistances, a);
-            return { time: tStar, point, along: a };
+            return { time: tStar, point, along: a, type };
         }
 
         // Create or update overtaking point marker (red dot)
@@ -1691,7 +1779,7 @@
                 map.removeLayer(dynamicMeetingMarker);
                 dynamicMeetingMarker = null;
             }
-            const evt = calculateOvertakingEvent();
+            const evt = calculateEncounterEvent();
             if (!evt) return;
             const dynamicMeetingIcon = L.divIcon({
                 className: 'meeting-point-marker-container',
@@ -1700,9 +1788,10 @@
                 iconAnchor: [12, 12]
             });
             dynamicMeetingMarker = L.marker(evt.point, { icon: dynamicMeetingIcon, zIndexOffset: 1100 });
+            const title = evt.type === 'meet' ? 'Meeting Point' : 'Overtaking Point';
             dynamicMeetingMarker.bindPopup(`
                 <div style="font-family: 'Courier New', monospace; font-size: 12px; text-align: center;">
-                    🔴 <strong>Overtaking Point</strong><br>
+                    🔴 <strong>${title}</strong><br>
                     <hr style="margin: 5px 0;">
                     🕰 <strong>Time:</strong> +${evt.time.toFixed(2)} min<br>
                     📍 <strong>Lat:</strong> ${evt.point[0].toFixed(5)}°<br>
@@ -1724,9 +1813,9 @@
         function overtakesBeforeThresholdWithOwnSpeed(testSpeed) {
             const original = ownShip.speed;
             ownShip.speed = testSpeed;
-            const evt = calculateOvertakingEvent();
+            const evt = calculateEncounterEvent();
             ownShip.speed = original;
-            if (!evt) return false;
+            if (!evt || evt.type !== 'overtake') return false;
             const thr = getKandilliThresholdAlong();
             return evt.along <= thr;
         }
@@ -2045,7 +2134,8 @@
             const coordsToUse = useSB ? route.coordsSouthbound : route.coords;
 
             // Draw polyline (slim but visible)
-            const line = L.polyline(coordsToUse, { color: route.color, weight: 3, opacity: 0.85 });
+            const style = getRouteStyle(routeId);
+            const line = L.polyline(coordsToUse, { color: style.color, weight: style.weight, opacity: style.opacity });
             line.addTo(map);
             routeOverlays.lines[routeId] = line;
 
@@ -2053,7 +2143,7 @@
             const markers = [];
             coordsToUse.forEach((coord, idx) => {
                 const num = String(idx + 1);
-                const html = `<div class=\"route-waypoint\"><span class=\"route-wp-dot\" style=\"background:${route.color}\"></span><span class=\"route-wp-num\">${num}</span></div>`;
+                const html = `<div class=\"route-waypoint\"><span class=\"route-wp-dot\" style=\"background:${style.color}\"></span><span class=\"route-wp-num\">${num}</span></div>`;
                 const icon = L.divIcon({
                     className: 'route-waypoint',
                     html: html,
@@ -2106,13 +2196,52 @@
             document.getElementById('mobileOpacityValue').textContent = e.target.value;
         });
         
+        function getRouteStyle(routeId){
+            // Returns style based on dark mode
+            if (darkModeEnabled) {
+                const colorMap = { sancak: '#6b62a8', orta: '#c07b2e', iskele: '#8b5f5f' };
+                return { color: colorMap[routeId] || '#8aa', weight: 2, opacity: 0.6 };
+            }
+            return { color: ROUTES[routeId].color, weight: 3, opacity: 0.85 };
+        }
+
+        function applyDarkModeTheme(){
+            // Toggle class on body
+            if (darkModeEnabled) document.body.classList.add('dark-mode');
+            else document.body.classList.remove('dark-mode');
+
+            // Restyle existing route overlays
+            Object.keys(routeOverlays.lines).forEach(id => {
+                const s = getRouteStyle(id);
+                try { routeOverlays.lines[id].setStyle({ color: s.color, weight: s.weight, opacity: s.opacity }); } catch {}
+            });
+
+            // Rebuild waypoint markers to update dot colors
+            if (routesVisible) {
+                const selected = new Set([ownShip.routeId, otherShip.routeId]);
+                // Clear then re-add
+                clearRoutesOverlay();
+                selected.forEach(id => addRouteOverlay(id));
+            }
+
+            // Redraw TSS overlay with subdued styling in dark mode
+            try { createManualTSS(); } catch {}
+
+            // Switch base map to dark/light tiles
+            try {
+                const url = darkModeEnabled ? BASEMAPS.dark : BASEMAPS.light;
+                if (baseLayer) { map.removeLayer(baseLayer); }
+                baseLayer = L.tileLayer(url, { attribution: '© OpenStreetMap contributors, © CartoDB', maxZoom: MAX_ZOOM });
+                baseLayer.addTo(map);
+            } catch {}
+
+            // Tweak OpenSeaMap opacity to reduce brightness in dark mode
+            try { if (openSeaMapLayer) openSeaMapLayer.setOpacity(darkModeEnabled ? 0.18 : 0.3); } catch {}
+        }
+
         document.getElementById('mobileDarkModeToggle').addEventListener('change', function(e) {
             darkModeEnabled = e.target.checked;
-            if (darkModeEnabled) {
-                document.body.style.filter = 'invert(1) hue-rotate(180deg)';
-            } else {
-                document.body.style.filter = 'none';
-            }
+            applyDarkModeTheme();
         });
 
         // Routes visibility toggle
@@ -2158,12 +2287,43 @@
         let glowOwnLine=null, glowOthLine=null;
         function ensure(){ if(!hud){ hud=document.createElement('div'); hud.className='mini-hud'; ownEl=document.createElement('div'); othEl=document.createElement('div'); remEl=document.createElement('div'); remEl.className='rem'; remEl.style.display='none'; hud.appendChild(ownEl); hud.appendChild(othEl); hud.appendChild(remEl); document.body.appendChild(hud);} }
         function routeDisplayName(id){ return id==='orta'?'Orta Kanal': id==='sancak'?'Sancak Hat':'İskele Hat'; }
-        function wpRangeLabel(ship, segIndex){ const id=ship.routeId, dir=ship.direction; if(id==='iskele'&&dir==='northbound'){ if(segIndex===4)return'wp5–wp6'; if(segIndex===5)return'wp6–wp7'; if(segIndex===10)return'wp11–wp12'; } if(id==='sancak'&&dir==='southbound'){ if(segIndex===6)return'wp7–wp8'; if(segIndex===11)return'wp12–wp13'; if(segIndex===12||segIndex===13)return'wp13–wp15'; } if(id==='orta'&&dir==='southbound'){ if(segIndex===11)return'wp12–wp13'; if(segIndex===12)return'wp13–wp14'; } return `wp${segIndex+1}–wp${segIndex+2}`; }
+        function wpRangeLabel(ship, segIndex){
+          const id=ship.routeId, dir=ship.direction;
+          if(id==='iskele'&&dir==='northbound'){
+            if(segIndex===4) return 'wp5–wp6';
+            if(segIndex===5) return 'wp6–wp7';
+            if(segIndex===6||segIndex===7) return 'wp7–wp9';
+            if(segIndex===10) return 'wp11–wp12';
+            if(segIndex===12||segIndex===13) return 'wp13–wp15';
+          }
+          if(id==='sancak'&&dir==='southbound'){
+            if(segIndex===6)return'wp7–wp8';
+            if(segIndex===11)return'wp12–wp13';
+            if(segIndex===12||segIndex===13)return'wp13–wp15';
+          }
+          if(id==='orta'&&dir==='southbound'){
+            if(segIndex===11)return'wp12–wp13';
+            if(segIndex===12)return'wp13–wp14';
+          }
+          return `wp${segIndex+1}–wp${segIndex+2}`;
+        }
         // HUD message builder (show revised speed)
         function buildMsgSpeed(ship, seg, effKts){ return `${routeDisplayName(ship.routeId)} ${wpRangeLabel(ship,seg)}: gemi sürati ${effKts.toFixed(1)} kts`; }
         function contextKey(){ try{ return `${ownShip.routeId}:${ownShip.direction}|${otherShip.routeId}:${otherShip.direction}|${currentAdvantageEnabled?1:0}`;}catch{return'na';}}
         
-        function setGlow(lineRef, wps, seg, delta){ const a=wps[seg], b=wps[seg+1]; if(!a||!b) return lineRef; const color = delta>=0 ? 'rgba(76,175,80,0.85)' : 'rgba(198,40,40,0.85)'; if(!lineRef){ lineRef = L.polyline([a,b], { color, weight: 7, opacity: 0.9 }).addTo(map); } else { lineRef.setStyle({ color }); lineRef.setLatLngs([a,b]); if(!map.hasLayer(lineRef)) lineRef.addTo(map); } return lineRef; }
+        function setGlow(lineRef, wps, seg, delta){
+          // In dark mode, avoid bright glow overlays to protect night vision
+          if (typeof darkModeEnabled !== 'undefined' && darkModeEnabled) {
+            if (lineRef) { try { map.removeLayer(lineRef); } catch {} }
+            return null;
+          }
+          const a=wps[seg], b=wps[seg+1]; if(!a||!b) return lineRef;
+          const color = delta>=0 ? 'rgba(76,175,80,0.65)' : 'rgba(198,40,40,0.65)';
+          const opts = { color, weight: 6, opacity: 0.8 };
+          if(!lineRef){ lineRef = L.polyline([a,b], opts).addTo(map); }
+          else { lineRef.setStyle(opts); lineRef.setLatLngs([a,b]); if(!map.hasLayer(lineRef)) lineRef.addTo(map); }
+          return lineRef;
+        }
         function clearGlow(){ if(glowOwnLine) try{ map.removeLayer(glowOwnLine);}catch{}; if(glowOthLine) try{ map.removeLayer(glowOthLine);}catch{}; glowOwnLine=glowOthLine=null; }
         function poll(){ if (typeof shipSimulationActive === 'undefined') { return; } if(!shipSimulationActive){ if(hud) hud.style.display='none'; clearGlow(); return; } ensure(); hud.style.display='block'; try { const own=getShipPositionAtTime(ownShip,currentTime), oth=getShipPositionAtTime(otherShip,currentTime); const os=own.segmentIndex, ts=oth.segmentIndex;
           const owps = ownShip.getStartingWaypoints();
