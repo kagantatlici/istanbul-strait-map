@@ -74,9 +74,11 @@
 
         /* ===== GPS Switch Panel (under vertical time bar) ===== */
         .gps-switch-panel {
-            position: absolute;
+            /* Anchor to bottom-right: stay above ship toggle with 12px gap */
+            position: fixed;
             right: 8px;
-            top: calc(50% + 150px + 8px);
+            /* 90px (toggle bottom) + 50px (toggle size) + 12px gap */
+            bottom: calc(90px + 50px + 12px + env(safe-area-inset-bottom, 0px));
             z-index: 1301;
             display: none; /* visible when simulation active */
             align-items: center;
