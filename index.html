@@ -70,74 +70,29 @@
             display: none !important;
         }
         
-        /* Header Time Slider - Replaces map title to eliminate overlap */
-        .header-time-slider {
+        /* (removed) header-time-slider: unused */
+
+        /* ===== GPS Switch Panel (under vertical time bar) ===== */
+        .gps-switch-panel {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 60px; /* Leave space for hamburger menu */
-            z-index: 1000;
+            right: 8px;
+            top: calc(50% + 150px + 8px);
+            z-index: 1301;
+            display: none; /* visible when simulation active */
+            align-items: center;
+            flex-direction: column; /* label under the switch */
+            gap: 4px;
+            padding: 6px 10px;
             background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 50, 100, 0.9));
-            color: #ffffff;
-            padding: 8px 12px;
-            border-radius: 8px;
+            color: white;
             border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            font-family: 'Courier New', monospace;
-            max-width: calc(100vw - 80px);
-            display: none; /* Hidden by default, shown when ship simulation is active */
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            user-select: none;
         }
+        .gps-switch-label { font-size: 11px; opacity: 0.9; }
         
-        .header-time-slider.active {
-            display: block;
-        }
-        
-        .header-time-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            margin-bottom: 4px;
-            opacity: 0.8;
-        }
-        
-        .header-time-slider input[type="range"] {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-            outline: none;
-            -webkit-appearance: none;
-            margin-bottom: 4px;
-        }
-        
-        .header-time-slider input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #2196F3;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .header-time-slider input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            background: #2196F3;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .header-time-info {
-            text-align: center;
-            font-size: 10px;
-            font-weight: bold;
-            color: #FFD700;
-        }
+        /* (removed) header-time-slider subrules: unused */
         
         
         /* Ship Toggle Button */
@@ -640,6 +595,7 @@
         }
         .banner-status.success { background: rgba(56, 142, 60, 0.95); }
         .banner-status.error { background: rgba(198, 40, 40, 0.95); }
+        .banner-status.info { background: rgba(120, 144, 156, 0.85); }
         .banner-minspeed.info { background: rgba(25, 118, 210, 0.95); }
         .banner-distance { background: rgba(76, 175, 80, 0.95); }
 
@@ -669,26 +625,7 @@
         }
 
         /* ===== Custom Meeting Point Marker Style ===== */
-        .custom-meeting-marker {
-            width: 20px; /* Scaled down from 24px */
-            height: 20px; /* Scaled down from 24px */
-            background: radial-gradient(circle, #ff0000, #cc0000);
-            border: 2px solid #ffffff; /* Scaled down */
-            border-radius: 50%;
-            position: relative;
-            animation: meetingPulse 2s infinite;
-            box-shadow: 0 2px 8px rgba(255, 0, 0, 0.5);
-        }
-        .custom-meeting-marker::before {
-            content: 'X'; /* Using X instead of warning sign for clarity */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 12px; /* Scaled down */
-            font-weight: bold;
-        }
+        /* (removed) custom-meeting-marker: unused */
         @keyframes meetingPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); box-shadow: 0 2px 12px rgba(255, 0, 0, 0.8); }
@@ -717,28 +654,7 @@
             font-weight: bold;
         }
 
-        .single-meeting-marker {
-            width: 20px;
-            height: 20px;
-            background: #FF5252;
-            border: 4px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(255, 82, 82, 0.6);
-            z-index: 999;
-            position: relative;
-            animation: meetingPulse 2s infinite;
-        }
-        .single-meeting-marker::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            bottom: -8px;
-            border: 2px solid rgba(255, 82, 82, 0.3);
-            border-radius: 50%;
-            animation: meetingRipple 2s infinite;
-        }
+        /* (removed) single-meeting-marker: unused */
         @keyframes meetingRipple {
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(1.5); opacity: 0; }
@@ -749,10 +665,7 @@
         body.dark-mode .leaflet-container { background-color: #0b0f12; }
         
         /* Panels and controls */
-        body.dark-mode .header-time-slider { background: rgba(12,14,18,0.9); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; color: #e0e0e0; }
-        body.dark-mode .header-time-slider input[type="range"]{ background: rgba(255,255,255,0.18); }
-        body.dark-mode .header-time-slider input[type="range"]::-webkit-slider-thumb{ background:#78909c; border-color:#cfd8dc; }
-        body.dark-mode .header-time-slider input[type="range"]::-moz-range-thumb{ background:#78909c; border-color:#cfd8dc; }
+        /* (removed) dark-mode header-time-slider overrides */
 
         body.dark-mode .hamburger-button{ background: rgba(20,24,28,0.95); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
         body.dark-mode .hamburger-dropdown{ background: rgba(12,14,18,0.98); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
@@ -779,6 +692,7 @@
         body.dark-mode .banner-minspeed.info{ background: rgba(25,118,210,0.60); }
         body.dark-mode .banner-status.success{ background: rgba(56,142,60,0.60); }
         body.dark-mode .banner-status.error{ background: rgba(198,40,40,0.60); }
+        body.dark-mode .banner-status.info{ background: rgba(120,144,156,0.50); }
 
         /* Route waypoint labels */
         body.dark-mode .route-wp-dot{ box-shadow: none; border: 1px solid rgba(255,255,255,0.12); opacity: 0.75; }
@@ -792,16 +706,13 @@
         body.dark-mode .ship-marker.other-ship::before{ border-bottom-color: rgba(255,152,0,0.6); }
 
         /* Meeting markers - no glow, subdued */
-        body.dark-mode .meeting-point-marker,
-        body.dark-mode .custom-meeting-marker,
-        body.dark-mode .single-meeting-marker{
+        body.dark-mode .meeting-point-marker{
             animation: none !important;
             box-shadow: none !important;
             background: #a33b3b !important;
             border-color: rgba(255,255,255,0.12) !important;
         }
-        body.dark-mode .meeting-point-marker::before,
-        body.dark-mode .custom-meeting-marker::before{
+        body.dark-mode .meeting-point-marker::before{
             color: #f0f0f0;
         }
 
@@ -815,8 +726,18 @@
     <body>
     <!-- Advisory Banners (top-center) -->
     <div id="advisoryBanners" class="advisory-banners" style="display:none;">
+        <div id="bannerStatus" class="banner banner-status" style="display:none;"></div>
         <div id="bannerDistance" class="banner banner-distance"></div>
         <div id="bannerMinSpeed" class="banner banner-minspeed"></div>
+    </div>
+    
+    <!-- GPS Switch Panel (under vertical time bar) -->
+    <div id="gpsSnapPanel" class="gps-switch-panel" title="GPS ile rotaya hizala">
+        <label class="mobile-toggle-switch" aria-label="GPS">
+            <input type="checkbox" id="gpsSnapSwitch">
+            <span class="mobile-toggle-slider"></span>
+        </label>
+        <span class="gps-switch-label">GPS</span>
     </div>
     <!-- V3 Hamburger Menu with Ship Data -->
     <div class="mobile-hamburger-menu">
@@ -968,20 +889,29 @@
         // Ship simulation variables
         let shipSimulationActive = false;
         let shipRoute = null;
-        let routeWaypoints = [];
-        let routeDistances = [];
-        let totalRouteDistance = 0;
         let currentTime = 0; // minutes from start
         let animationFrame = null;
         let currentRouteWaypoints = []; // Active route based on direction
-        let singleMeetingMarker = null; // Single marker for nearest meeting point
         let dynamicMeetingMarker = null; // Dynamic red meeting point marker
-        let verticalSliderActive = false; // Flag for vertical slider state
+        let dynamicMeetingLocked = false; // Persist once created; no repositioning
         let kandilliThresholdAlong = null; // cached along-distance for Arnavutköy (İskele wp7)
 
         // Ship markers and tracking
         let ownShipMarker = null;
         let otherShipMarker = null;
+
+        // GPS snap state
+        const GPS_ACCURACY_THRESHOLD_M = 100; // ±100 m
+        const GPS_DISTANCE_THRESHOLD_NM = 0.27; // ~500 m
+        let gpsSnap = {
+            enabled: false,
+            lastFix: null, // {lat, lng, accuracy}
+            lastSnapAt: null,
+            requestId: 0,
+            activeWatchId: null,
+            tempMarker: null,
+            tempLine: null
+        };
 
         // Route overlay controls
         let routesVisible = true;
@@ -1366,6 +1296,61 @@
             return totalDistance;
         }
 
+        // Find nearest point on route and along-distance + gap distance (nm)
+        function findNearestOnRoute(position, waypoints, distances) {
+            let minDistance = Infinity;
+            let bestSegmentIndex = 0;
+            let bestProgress = 0;
+            let bestPoint = waypoints[0];
+
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const a = waypoints[i];
+                const b = waypoints[i + 1];
+                const p = projectPointOnSegment(position, a, b);
+                const d = calculateDistance(position.lat, position.lng, p[0], p[1]);
+                if (d < minDistance) {
+                    minDistance = d;
+                    bestSegmentIndex = i;
+                    const segLen = calculateDistance(a[0], a[1], b[0], b[1]);
+                    const progLen = calculateDistance(a[0], a[1], p[0], p[1]);
+                    bestProgress = segLen > 0 ? progLen / segLen : 0;
+                    bestPoint = p;
+                }
+            }
+
+            // Accumulate distance along up to best segment
+            let distanceAlong = 0;
+            for (let i = 0; i < bestSegmentIndex; i++) distanceAlong += distances[i] || 0;
+            distanceAlong += (distances[bestSegmentIndex] || 0) * bestProgress;
+
+            return {
+                distanceAlong,
+                snapped: bestPoint,
+                segmentIndex: bestSegmentIndex,
+                progress: bestProgress,
+                distanceToRouteNm: minDistance
+            };
+        }
+
+        // Status banner helper
+        function showStatusBanner(message, type /* 'success' | 'error' | 'info' */) {
+            const container = document.getElementById('advisoryBanners');
+            const el = document.getElementById('bannerStatus');
+            if (!container || !el) return;
+            container.style.display = 'flex';
+            el.textContent = message;
+            let klass = 'banner banner-status';
+            if (type === 'success') klass += ' success';
+            else if (type === 'error') klass += ' error';
+            else if (type === 'info') klass += ' info';
+            el.className = klass;
+            el.style.display = 'block';
+            // Auto-hide: info shorter (3s), others 4s
+            clearTimeout(el._hideTimer);
+            const dur = type === 'info' ? 3000 : 4000;
+            el._hideTimer = setTimeout(() => { el.style.display = 'none'; }, dur);
+        }
+
         // Calculate bearing between two points
         function calculateBearing(lat1, lng1, lat2, lng2) {
             const dLng = (lng2 - lng1) * Math.PI / 180;
@@ -1740,13 +1725,8 @@
 
             let f0 = alongDiff(0);
             if (type === 'overtake') {
-                if (f0 >= 0) {
-                    const o = getShipPositionAtTime(ownShip, 0);
-                    const a = progressAlongReference(o.position[0], o.position[1]);
-                    const { refCoords, refDistances } = getReferenceRouteAndDistances();
-                    const point = getPointAlongRouteByDistance(refCoords, refDistances, a);
-                    return { time: 0, point, along: a, type };
-                }
+                // If faster ship is already ahead (no catch-up needed), do not create an event
+                if (f0 >= 0) return null;
             } else { // meet
                 // If f0 >= 0 under our monotone diff, ships are diverging => no meeting ahead
                 if (f0 >= 0) return null;
@@ -1773,14 +1753,19 @@
             return { time: tStar, point, along: a, type };
         }
 
-        // Create or update overtaking point marker (red dot)
+        // Create overtaking/meeting point marker once (persist)
         function updateDynamicMeetingPoint() {
-            if (dynamicMeetingMarker) {
-                map.removeLayer(dynamicMeetingMarker);
-                dynamicMeetingMarker = null;
-            }
+            // If we already decided (created or explicitly not created), do nothing
+            if (dynamicMeetingLocked) return;
+            if (dynamicMeetingMarker) return;
             const evt = calculateEncounterEvent();
-            if (!evt) return;
+            if (!evt) {
+                // If ships are same direction and no overtake event, lock as never-occurring edge case
+                const ownNorth = ownShip.direction === 'northbound';
+                const othNorth = otherShip.direction === 'northbound';
+                if (ownNorth === othNorth) dynamicMeetingLocked = true;
+                return;
+            }
             const dynamicMeetingIcon = L.divIcon({
                 className: 'meeting-point-marker-container',
                 html: '<div class="meeting-point-marker"></div>',
@@ -1799,8 +1784,160 @@
                 </div>
             `);
             dynamicMeetingMarker.addTo(map);
+            // Lock so it doesn't move/disappear after creation
+            dynamicMeetingLocked = true;
         }
 
+        // Reset persistent meeting/overtaking marker so it can be recomputed
+        function resetDynamicMeetingPoint() {
+            try {
+                if (dynamicMeetingMarker) { map.removeLayer(dynamicMeetingMarker); }
+            } catch(e){}
+            dynamicMeetingMarker = null;
+            dynamicMeetingLocked = false;
+        }
+
+        // ===== GPS Snap: UI + behavior =====
+        function updateGpsSnapUI() {
+            const panel = document.getElementById('gpsSnapPanel');
+            const sw = document.getElementById('gpsSnapSwitch');
+            if (!panel || !sw) return;
+            sw.checked = !!gpsSnap.enabled;
+        }
+
+        function stopGpsInterval() {
+            // no interval in simplified UX
+            // Also stop any active watch
+            if (gpsSnap.activeWatchId != null && navigator.geolocation && navigator.geolocation.clearWatch) {
+                try { navigator.geolocation.clearWatch(gpsSnap.activeWatchId); } catch(e){}
+                gpsSnap.activeWatchId = null;
+            }
+        }
+
+        function setGpsSnapEnabled(on) {
+            gpsSnap.enabled = !!on;
+            if (!on) {
+                // On turning off: snap once (so user can quickly refresh), suppress warnings and success; then disable
+                triggerGpsSnapOnce({ suppressSuccess: true, suppressWarnings: true }, () => {
+                    stopGpsInterval();
+                    gpsSnap.enabled = false;
+                    updateGpsSnapUI();
+                    // Subtle info notice
+                    showStatusBanner('GPS verisi kapatıldı', 'info');
+                });
+            } else {
+                // On turning on: snap once immediately
+                triggerGpsSnapOnce({ suppressSuccess: false }, () => { updateGpsSnapUI(); });
+            }
+        }
+
+        function triggerGpsSnapOnce(options, cb) {
+            if (typeof options === 'function') { cb = options; options = {}; }
+            if (!('geolocation' in navigator)) {
+                showStatusBanner('Geolocation desteklenmiyor', 'error');
+                if (cb) cb();
+                return;
+            }
+            // Concurrency guard
+            gpsSnap.requestId = (gpsSnap.requestId || 0) + 1;
+            const rid = gpsSnap.requestId;
+
+            // Ensure no previous watch stays around
+            if (gpsSnap.activeWatchId != null && navigator.geolocation && navigator.geolocation.clearWatch) {
+                try { navigator.geolocation.clearWatch(gpsSnap.activeWatchId); } catch(e){}
+                gpsSnap.activeWatchId = null;
+            }
+
+            const opts = { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 };
+            let settled = false;
+            const finish = () => {
+                if (settled) return; settled = true;
+                if (gpsSnap.activeWatchId != null && navigator.geolocation && navigator.geolocation.clearWatch) {
+                    try { navigator.geolocation.clearWatch(gpsSnap.activeWatchId); } catch(e){}
+                    gpsSnap.activeWatchId = null;
+                }
+                if (cb) cb();
+            };
+
+            try {
+                const wid = navigator.geolocation.watchPosition(pos => {
+                    if (rid !== gpsSnap.requestId) return; // stale callback
+                    const { latitude, longitude, accuracy } = pos.coords || {};
+                    gpsSnap.lastFix = { lat: latitude, lng: longitude, accuracy };
+                    updateGpsSnapUI();
+                    snapOwnShipToNearestRoute(latitude, longitude, accuracy, options || {});
+                    finish();
+                }, err => {
+                    if (rid !== gpsSnap.requestId) return; // stale callback
+                    showStatusBanner('Konum alınamadı: ' + (err && err.message ? err.message : 'Hata'), 'error');
+                    finish();
+                }, opts);
+                gpsSnap.activeWatchId = wid;
+                // Safety timeout to ensure finish
+                setTimeout(() => { if (!settled) finish(); }, 12000);
+            } catch(e) {
+                showStatusBanner('Geolocation izleme başlatılamadı', 'error');
+                finish();
+            }
+        }
+
+        function snapOwnShipToNearestRoute(lat, lng, accuracyM, opts) {
+            try {
+                const waypoints = ownShip.getStartingWaypoints();
+                const distances = getSegmentDistances(waypoints);
+                const nearest = findNearestOnRoute({ lat, lng }, waypoints, distances);
+                const gapNm = nearest.distanceToRouteNm;
+                if (!(opts && opts.suppressWarnings)) {
+                    if (gapNm > GPS_DISTANCE_THRESHOLD_NM) {
+                        showStatusBanner(`GPS noktası rotadan uzak (~${gapNm.toFixed(2)} nm) — en yakın noktaya taşındı`, 'error');
+                    }
+                    if (typeof accuracyM === 'number' && accuracyM > GPS_ACCURACY_THRESHOLD_M) {
+                        showStatusBanner(`Düşük doğruluk (±${Math.round(accuracyM)} m) — yine de hizalandı`, 'error');
+                    }
+                }
+
+                const snapped = nearest.snapped; // [lat,lng]
+                ownShip.customStartPosition = L.latLng(snapped[0], snapped[1]);
+                ownShip.customStartTime = currentTime; // referansı mevcut simülasyon zamanı
+                updateShipPositions();
+                updateDynamicMeetingPoint();
+                updateAdvisoryBanners();
+
+                // Görsel iz: her seferinde güncel mavi nokta ve kesikli çizgi (öncekileri temizle)
+                if (typeof L !== 'undefined' && map && Array.isArray(snapped)) {
+                    try {
+                        if (gpsSnap.tempMarker) { try { map.removeLayer(gpsSnap.tempMarker); } catch(e){} }
+                        if (gpsSnap.tempLine) { try { map.removeLayer(gpsSnap.tempLine); } catch(e){} }
+                        const gpsPt = L.latLng(lat, lng);
+                        const snapPt = L.latLng(snapped[0], snapped[1]);
+                        gpsSnap.tempMarker = L.circleMarker(gpsPt, {
+                            radius: 4,
+                            color: '#00E5FF',
+                            fillColor: '#00E5FF',
+                            fillOpacity: 0.85,
+                            weight: 1
+                        }).addTo(map);
+                        gpsSnap.tempLine = L.polyline([gpsPt, snapPt], {
+                            color: '#00E5FF',
+                            weight: 2,
+                            dashArray: '4,4',
+                            opacity: 0.8
+                        }).addTo(map);
+                        setTimeout(() => {
+                            if (gpsSnap.tempMarker) { try { map.removeLayer(gpsSnap.tempMarker); } catch(e){} gpsSnap.tempMarker = null; }
+                            if (gpsSnap.tempLine) { try { map.removeLayer(gpsSnap.tempLine); } catch(e){} gpsSnap.tempLine = null; }
+                        }, 5000);
+                    } catch(e) { /* ignore overlay errors */ }
+                }
+
+                if (!opts || !opts.suppressSuccess) {
+                    showStatusBanner('GPS ile rotaya hizalandı', 'success');
+                }
+            } catch (e) {
+                console.error(e);
+                showStatusBanner('Hizalama sırasında hata', 'error');
+            }
+        }
         // ===== Advisory banners (Northbound only) =====
         function getKandilliThresholdAlong() {
             if (kandilliThresholdAlong != null) return kandilliThresholdAlong;
@@ -1837,30 +1974,38 @@
             // Minimum speed banner (northbound scenario only)
             const bothNorth = ownShip.direction === 'northbound' && otherShip.direction === 'northbound';
             if (bothNorth) {
-                // If own already ahead at t=0, hide min speed only
-                const own0 = getShipPositionAtTime(ownShip, 0);
-                const other0 = getShipPositionAtTime(otherShip, 0);
-                const a0 = progressAlongReference(own0.position[0], own0.position[1]);
-                const b0 = progressAlongReference(other0.position[0], other0.position[1]);
-                if (a0 < b0) {
-                    let lo = 0.1, hi = 15.0, found = null;
-                    for (let i = 0; i < 22; i++) {
-                        const mid = (lo + hi) / 2;
-                        if (overtakesBeforeThresholdWithOwnSpeed(mid)) { found = mid; hi = mid; }
-                        else { lo = mid; }
-                    }
-                    let minText = '';
-            if (found == null) {
-                minText = 'Arnavutköy Fenerinde yetişme sürati >15.0 kts.';
-            } else {
-                const roundedUp = Math.ceil(found * 10) / 10;
-                minText = `Arnavutköy Fenerinde yetişme sürati ${roundedUp.toFixed(1)} kts.`;
-            }
-                    minEl.style.display = '';
-                    minEl.className = 'banner banner-minspeed info';
-                    minEl.textContent = minText;
-                } else {
+                // If either ship has reached/passed the Arnavutköy (İskele wp7) threshold, hide banner
+                const thr = getKandilliThresholdAlong();
+                const ownAlongNow = progressAlongReference(ownPos[0], ownPos[1]);
+                const otherAlongNow = progressAlongReference(otherPos[0], otherPos[1]);
+                if (ownAlongNow >= thr || otherAlongNow >= thr) {
                     minEl.style.display = 'none';
+                } else {
+                    // If own already ahead at t=0, hide min speed only
+                    const own0 = getShipPositionAtTime(ownShip, 0);
+                    const other0 = getShipPositionAtTime(otherShip, 0);
+                    const a0 = progressAlongReference(own0.position[0], own0.position[1]);
+                    const b0 = progressAlongReference(other0.position[0], other0.position[1]);
+                    if (a0 < b0) {
+                        let lo = 0.1, hi = 15.0, found = null;
+                        for (let i = 0; i < 22; i++) {
+                            const mid = (lo + hi) / 2;
+                            if (overtakesBeforeThresholdWithOwnSpeed(mid)) { found = mid; hi = mid; }
+                            else { lo = mid; }
+                        }
+                        let minText = '';
+                        if (found == null) {
+                            minText = 'Arnavutköy Fenerinde yetişme sürati >15.0 kts.';
+                        } else {
+                            const roundedUp = Math.ceil(found * 10) / 10;
+                            minText = `Arnavutköy Fenerinde yetişme sürati ${roundedUp.toFixed(1)} kts.`;
+                        }
+                        minEl.style.display = '';
+                        minEl.className = 'banner banner-minspeed info';
+                        minEl.textContent = minText;
+                    } else {
+                        minEl.style.display = 'none';
+                    }
                 }
             } else {
                 minEl.style.display = 'none';
@@ -1916,12 +2061,26 @@
         // Native Leaflet drag handlers (mobile-friendly)
         function attachNativeDrag(ship, marker) {
             marker.on('dragend', function() {
+                // New initial conditions: reset overtaking/meeting marker
+                resetDynamicMeetingPoint();
                 const pos = marker.getLatLng();
                 ship.customStartPosition = pos;
                 ship.customStartTime = currentTime;
                 updateShipPositions();
                 updateDynamicMeetingPoint();
                 updateAdvisoryBanners();
+                // Disable auto GPS snap if user manually drags own ship
+                if (ship.id === 'own' && gpsSnap && gpsSnap.enabled) {
+                    stopGpsInterval();
+                    gpsSnap.enabled = false;
+                    updateGpsSnapUI();
+                    showStatusBanner('Manuel konum — GPS kapatıldı', 'info');
+                    // Also clear temporary GPS overlays immediately
+                    try {
+                        if (gpsSnap.tempMarker) { map.removeLayer(gpsSnap.tempMarker); gpsSnap.tempMarker = null; }
+                        if (gpsSnap.tempLine) { map.removeLayer(gpsSnap.tempLine); gpsSnap.tempLine = null; }
+                    } catch(e){}
+                }
             });
         }
 
@@ -1933,11 +2092,10 @@
             // Clear existing markers
             if (ownShipMarker) map.removeLayer(ownShipMarker);
             if (otherShipMarker) map.removeLayer(otherShipMarker);
-            if (singleMeetingMarker) map.removeLayer(singleMeetingMarker);
             if (dynamicMeetingMarker) map.removeLayer(dynamicMeetingMarker);
             
-            singleMeetingMarker = null;
             dynamicMeetingMarker = null;
+            dynamicMeetingLocked = false;
             
             // Create ship markers
             const ownPosData = getShipPositionAtTime(ownShip, 0);
@@ -1972,6 +2130,10 @@
             
             // Update UI
             document.getElementById('shipToggle').classList.add('active');
+            // Show GPS switch panel
+            const gpsPanel = document.getElementById('gpsSnapPanel');
+            if (gpsPanel) gpsPanel.style.display = 'flex';
+            updateGpsSnapUI();
             
             // Reset slider
             document.getElementById('verticalTimeControl').value = 0;
@@ -1991,12 +2153,10 @@
             // Clear markers
             if (ownShipMarker) map.removeLayer(ownShipMarker);
             if (otherShipMarker) map.removeLayer(otherShipMarker);
-            if (singleMeetingMarker) map.removeLayer(singleMeetingMarker);
             if (dynamicMeetingMarker) map.removeLayer(dynamicMeetingMarker);
             
             ownShipMarker = null;
             otherShipMarker = null;
-            singleMeetingMarker = null;
             dynamicMeetingMarker = null;
             
             // Reset all ships custom positions
@@ -2011,6 +2171,12 @@
             
             // Update UI
             document.getElementById('shipToggle').classList.remove('active');
+            // Hide GPS switch panel and stop watch
+            const gpsPanel = document.getElementById('gpsSnapPanel');
+            if (gpsPanel) gpsPanel.style.display = 'none';
+            stopGpsInterval();
+            gpsSnap.enabled = false;
+            updateGpsSnapUI();
 
         }
         
@@ -2033,6 +2199,7 @@
         
         // Ship speed controls
         document.getElementById('ownShipSpeed').addEventListener('input', function(e) {
+            resetDynamicMeetingPoint();
             ownShip.speed = parseFloat(e.target.value);
             if (shipSimulationActive) {
                 updateShipPositions();
@@ -2041,12 +2208,21 @@
         });
         
         document.getElementById('otherShipSpeed').addEventListener('input', function(e) {
+            resetDynamicMeetingPoint();
             otherShip.speed = parseFloat(e.target.value);
             if (shipSimulationActive) {
                 updateShipPositions();
             }
             updateAdvisoryBanners();
         });
+
+        // GPS switch events
+        const gpsSwitch = document.getElementById('gpsSnapSwitch');
+        if (gpsSwitch) {
+            gpsSwitch.addEventListener('change', function(e) {
+                setGpsSnapEnabled(!!e.target.checked);
+            });
+        }
 
         // Route selection controls
         const ownRouteSelect = document.getElementById('ownRouteSelect');
