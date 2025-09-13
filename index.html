@@ -1039,7 +1039,8 @@
         };
         let baseLayer = L.tileLayer(BASEMAPS.light, {
             attribution: '© OpenStreetMap contributors, © CartoDB',
-            maxZoom: MAX_ZOOM
+            maxZoom: MAX_ZOOM,
+            zIndex: 1
         });
         
         baseLayer.addTo(map);
@@ -1153,7 +1154,8 @@
             openSeaMapLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
                 attribution: '© OpenSeaMap contributors',
                 opacity: 0.3,
-                maxZoom: MAX_ZOOM
+                maxZoom: MAX_ZOOM,
+                zIndex: 2
             });
             openSeaMapLayer.addTo(map);
         }
@@ -2409,8 +2411,9 @@
             try {
                 const url = darkModeEnabled ? BASEMAPS.dark : BASEMAPS.light;
                 if (baseLayer) { map.removeLayer(baseLayer); }
-                baseLayer = L.tileLayer(url, { attribution: '© OpenStreetMap contributors, © CartoDB', maxZoom: MAX_ZOOM });
+                baseLayer = L.tileLayer(url, { attribution: '© OpenStreetMap contributors, © CartoDB', maxZoom: MAX_ZOOM, zIndex: 1 });
                 baseLayer.addTo(map);
+                if (openSeaMapLayer) { openSeaMapLayer.bringToFront(); }
             } catch {}
 
             // Tweak OpenSeaMap opacity to reduce brightness in dark mode
