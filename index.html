@@ -69,6 +69,42 @@
         .leaflet-control-zoom {
             display: none !important;
         }
+
+        /* Author badge (top-left, subtle) */
+        .author-badge {
+            position: absolute;
+            right: 15px;
+            /* Fallback position: under the ship toggle (approx gap 10–12px) */
+            bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+            z-index: 900;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.25px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.95;
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+            transition: opacity 0.4s ease;
+        }
+        body.dark-mode .author-badge {
+            color: rgba(255, 255, 255, 0.75);
+            background: rgba(12, 14, 18, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+        }
+        body:not(.dark-mode) .author-badge {
+            color: rgba(0, 0, 0, 0.72);
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.35);
+        }
+        .author-badge.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
         
         /* (removed) header-time-slider: unused */
 
@@ -874,7 +910,9 @@
         <div class="vertical-time-info" id="verticalTimeInfo">Now</div>
     </div>
     
-    <div id="map"></div>
+    <div id="map">
+        <div class="author-badge" aria-hidden="true">Kpt. Kağan TATLICI</div>
+    </div>
 
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
@@ -2453,6 +2491,43 @@
         // Initialize advisory banners
         updateAdvisoryBanners();
 
+    </script>
+    <script>
+      // Author badge: position under the ship toggle (bottom-right) and hide after 10–15s
+      (function(){
+        function positionBadge(){
+          var map = document.getElementById('map');
+          var badge = document.querySelector('.author-badge');
+          var toggle = document.getElementById('shipToggle');
+          if (!map || !badge || !toggle) return;
+          var mapRect = map.getBoundingClientRect();
+          var tgRect = toggle.getBoundingClientRect();
+          var gap = 10; // px gap below toggle
+          var top = (tgRect.bottom + gap) - mapRect.top;
+          // Keep within map viewport
+          var maxTop = mapRect.height - badge.offsetHeight - 8; // leave small bottom gap
+          if (top > maxTop) top = maxTop;
+          if (top < 8) top = 8;
+          badge.style.top = top + 'px';
+          badge.style.bottom = 'auto';
+          badge.style.right = '15px';
+          badge.style.left = 'auto';
+        }
+        function hideBadge(){
+          var el = document.querySelector('.author-badge');
+          if (el) el.classList.add('is-hidden');
+        }
+        function onLoad(){
+          positionBadge();
+          var el = document.querySelector('.author-badge');
+          if (!el) return;
+          var delaySec = 10 + Math.random() * 5; // 10–15 seconds
+          setTimeout(hideBadge, delaySec * 1000);
+        }
+        window.addEventListener('load', onLoad);
+        window.addEventListener('resize', positionBadge);
+        window.addEventListener('orientationchange', positionBadge);
+      })();
     </script>
     <!-- Variant v3: Mini HUD for akıntı etkisi -->
     <style>
